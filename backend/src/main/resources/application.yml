@@ -49,7 +49,7 @@ management:
 
 app:
   api:
-    version: 1.0.0
+    version: 1.1.0   # minor: phase 2 added claim endpoints (non-breaking, ADR-0008)
     server-url: ${API_PUBLIC_URL:http://localhost:8081}
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:4200}
@@ -59,6 +59,13 @@ app:
       issuer: ai-claims-platform
       access-token-ttl: 15m
       refresh-token-ttl: 7d
+
+  # Triage thresholds (TriageRules): business settings, changeable per environment
+  triage:
+    fast-track-max-estimate: 2000.00
+    fast-track-max-fraud-score: 20
+    complex-min-estimate: 25000.00
+    siu-referral-score: 70
 
 springdoc:
   swagger-ui:

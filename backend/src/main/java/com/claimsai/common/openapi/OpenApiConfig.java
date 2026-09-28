@@ -48,6 +48,7 @@ public class OpenApiConfig {
             409, "Conflicts with the current state: invalid transition, duplicate or concurrent update",
             412, "`If-Match` does not match the current version: reload and retry",
             422, "Well-formed, but breaks a business rule",
+            428, "`If-Match` is required on this request: send the ETag from your last GET",
             429, "Too many requests",
             500, "Unexpected error (details are logged with the correlation ID, never returned)");
 

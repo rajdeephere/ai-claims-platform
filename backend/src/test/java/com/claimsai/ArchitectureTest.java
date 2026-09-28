@@ -5,12 +5,14 @@ import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.junit.AnalyzeClasses;
 import com.tngtech.archunit.junit.ArchTest;
 
+import java.util.List;
+
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 import static com.tngtech.archunit.library.dependencies.SlicesRuleDefinition.slices;
 
 /**
- * Module and layer rules, checked on every build (ADR-0002). Each module (identity, claim, payment, ...) has
- * api (controllers, DTOs) -> app (services, transactions) -> domain (entities, rules), plus infra
+ * Module and layer rules, checked on every build (ADR-0002). Each module (identity, claim, policy, audit, ...)
+ * has api (controllers, DTOs) -> app (services, transactions) -> domain (entities, rules), plus infra
  * (repositories, adapters) and config.
  *
  * <p>Rules are METHODS, not {@code static final ArchRule} fields: Surefire 3.5 silently skips field-based
@@ -19,6 +21,9 @@ import static com.tngtech.archunit.library.dependencies.SlicesRuleDefinition.sli
  */
 @AnalyzeClasses(packages = "com.claimsai", importOptions = ImportOption.DoNotIncludeTests.class)
 class ArchitectureTest {
+
+    /** Business modules with the api/app/domain/infra layout. */
+    private static final List<String> MODULES = List.of("identity", "claim", "policy", "audit");
 
     @ArchTest
     static void controllersDoNotUseRepositoriesDirectly(JavaClasses classes) {
@@ -37,11 +42,25 @@ class ArchitectureTest {
     }
 
     @ArchTest
-    static void commonDependsOnNoBusinessModule(JavaClasses classes) {
-        noClasses().that().resideInAPackage("com.claimsai.common..")
-                .should().dependOnClassesThat().resideInAnyPackage("com.claimsai.identity..")
-                .because("common is shared infrastructure; business modules depend on it, never the reverse")
+    static void commonAndPlatformDependOnNoBusinessModule(JavaClasses classes) {
+        noClasses().that().resideInAnyPackage("com.claimsai.common..", "com.claimsai.platform..")
+                .should().dependOnClassesThat().resideInAnyPackage(
+                        MODULES.stream().map(m -> "com.claimsai." + m + "..").toArray(String[]::new))
+                .because("shared infrastructure; business modules depend on it, never the reverse")
                 .check(classes);
+    }
+
+    /** A module may use another module's domain types and services, never its repositories or adapters. */
+    @ArchTest
+    static void modulesDoNotReachIntoEachOthersInfrastructure(JavaClasses classes) {
+        for (String module : MODULES) {
+            String[] foreignInfra = MODULES.stream().filter(other -> !other.equals(module))
+                    .map(other -> "com.claimsai." + other + ".infra..").toArray(String[]::new);
+            noClasses().that().resideInAPackage("com.claimsai." + module + "..")
+                    .should().dependOnClassesThat().resideInAnyPackage(foreignInfra)
+                    .because("another module's tables and adapters are its private implementation")
+                    .check(classes);
+        }
     }
 
     @ArchTest

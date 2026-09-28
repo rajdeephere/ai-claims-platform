@@ -64,7 +64,8 @@ public class SecurityConfig {
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of(HttpHeaders.AUTHORIZATION, HttpHeaders.CONTENT_TYPE, HttpHeaders.IF_MATCH,
                 "Idempotency-Key", "X-Correlation-Id"));
-        config.setExposedHeaders(List.of(HttpHeaders.ETAG, HttpHeaders.LOCATION, "X-Correlation-Id"));
+        config.setExposedHeaders(List.of(HttpHeaders.ETAG, HttpHeaders.LOCATION, "X-Correlation-Id",
+                "Idempotent-Replayed"));
         config.setMaxAge(3600L);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);

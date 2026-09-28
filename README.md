@@ -37,9 +37,20 @@ mvn spring-boot:run                  # API on http://localhost:8081 (profile: lo
 - Demo users: `claimant1`, `claimant2`, `adjuster1`, `adjuster2`, `supervisor1`, `siu1`, password `Password1!`
 
 ```bash
-curl -s -X POST localhost:8081/api/v1/auth/login -H 'Content-Type: application/json' \
-  -d '{"username":"adjuster1","password":"Password1!"}'
+# log in as a claimant and report a loss
+TOKEN=$(curl -s -X POST localhost:8081/api/v1/auth/login -H 'Content-Type: application/json' \
+  -d '{"username":"claimant1","password":"Password1!"}' | jq -r .accessToken)
+
+curl -s -X POST localhost:8081/api/v1/portal/claims -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' -H "Idempotency-Key: $(uuidgen)" \
+  -d '{"policyNumber":"POL-AUTO-1001","lossDate":"2026-09-26","lossType":"VEHICLE_COLLISION",
+       "lossLocation":"MG Road","description":"Rear-ended at a signal","injuriesReported":false,
+       "estimatedLoss":3800}'
 ```
+
+The claim is policy-checked, triaged and assigned to an adjuster straight away. Log in as that adjuster
+(or `supervisor1`) and use `/api/v1/claims`; every command needs the claim's ETag in `If-Match`.
+Demo policies are listed in [phase 2](docs/phases/phase-02-claim-core.md#demo-policies).
 
 ## Tests
 

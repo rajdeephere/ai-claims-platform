@@ -12,5 +12,10 @@
 | [0008](0008-api-versioning-and-committed-openapi-contract.md) | URI versioning and a committed, build-checked OpenAPI contract | Accepted | 1 |
 | [0009](0009-one-error-model-with-stable-codes.md) | One error model with stable error codes | Accepted | 1 |
 | [0010](0010-testing-strategy.md) | Testing strategy: unit, ArchUnit, Testcontainers, contract | Accepted | 1 |
+| [0011](0011-idempotent-fnol-with-idempotency-keys.md) | Idempotent FNOL with per-user Idempotency-Key | Accepted | 2 |
+| [0012](0012-separate-claimant-and-staff-apis-with-etag-if-match.md) | Separate claimant and staff APIs; ETag / If-Match on every command | Accepted | 2 |
+| [0013](0013-append-only-audit-trail.md) | Append-only audit trail, written in the business transaction | Accepted | 2 |
+| [0014](0014-synchronous-intake-until-the-job-queue.md) | Synchronous intake in phase 2, moved to jobs in phase 3 | Accepted (temporary) | 2 |
+| [0015](0015-claim-visibility-permission-and-status-checks.md) | Claim access: visibility (404), permission (403), status (409) | Accepted | 2 |
 
 New ADRs use [template.md](template.md).
