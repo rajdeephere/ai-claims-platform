@@ -1,0 +1,22 @@
+# Build output
+target/
+*.class
+*.log
+
+# Frontend
+node_modules/
+dist/
+.angular/
+
+# IDE / OS
+.idea/
+*.iml
+.vscode/
+.DS_Store
+
+# Local secrets
+.env
+*.env.local
+
+# Personal interview study notes: kept locally, never committed
+interview-prep/

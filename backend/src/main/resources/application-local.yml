@@ -1,0 +1,12 @@
+# Local development against docker-compose (docker compose up -d --wait)
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5434/aiclaims
+    username: aiclaims
+    password: aiclaims
+
+app:
+  security:
+    jwt:
+      # development only; prod has no default and fails to start without JWT_SECRET
+      secret: local-development-secret-change-me-0123456789

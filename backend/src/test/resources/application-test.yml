@@ -1,0 +1,5 @@
+# Integration tests: the datasource comes from the Testcontainers @ServiceConnection
+app:
+  security:
+    jwt:
+      secret: test-secret-for-integration-tests-0123456789
