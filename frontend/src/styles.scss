@@ -1,0 +1,30 @@
+@use '@angular/material' as mat;
+
+html {
+  @include mat.theme((
+    color: (
+      primary: mat.$azure-palette,
+      tertiary: mat.$cyan-palette,
+    ),
+    typography: Inter,
+    density: 0,
+  ));
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  font-family: 'Inter', system-ui, sans-serif;
+  background-color: #f5f7fa;
+}
+
+.success-snackbar .mdc-snackbar__surface {
+  background-color: #16a34a !important;
+}
+.error-snackbar .mdc-snackbar__surface {
+  background-color: #e53935 !important;
+}
+.info-snackbar .mdc-snackbar__surface {
+  background-color: #2563eb !important;
+}

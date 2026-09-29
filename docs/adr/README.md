@@ -30,5 +30,7 @@
 | [0026](0026-siu-cases-behind-a-port-with-case-based-visibility.md) | SIU cases behind a port, with case-based visibility | Accepted | 7 |
 | [0027](0027-activities-from-events-with-sla-timers.md) | Activities created from events, with SLA timers; information-request deadlines | Accepted | 7 |
 | [0028](0028-money-in-event-payloads-as-strings.md) | Money in event payloads is a string | Accepted | 7 |
+| [0029](0029-spa-token-handling-and-a-typed-client-from-the-contract.md) | Angular client: token handling, single-flight refresh, types from the contract | Accepted | 8 |
+| [0030](0030-deployment-topology-and-build-time-api-url.md) | Deployment topology: direct CORS calls, API URL fixed at build time | Accepted | 8 |
 
 New ADRs use [template.md](template.md).

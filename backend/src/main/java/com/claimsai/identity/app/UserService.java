@@ -30,6 +30,10 @@ public class UserService {
                 .orElseThrow(() -> new NotFoundException("USER_NOT_FOUND", "User not found"));
     }
 
+    public List<UserRef> activeUsers(Role role) {
+        return users.findByRoleAndActiveTrueOrderByIdAsc(role).stream().map(UserRef::of).toList();
+    }
+
     public List<Long> activeUserIds(Role role) {
         return users.findByRoleAndActiveTrueOrderByIdAsc(role).stream().map(AppUser::getId).toList();
     }

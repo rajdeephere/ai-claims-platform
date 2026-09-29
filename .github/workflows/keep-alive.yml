@@ -1,0 +1,20 @@
+# Render's free service sleeps after 15 idle minutes and Supabase pauses a project after ~7 idle days
+# (ADR-0007). The health check touches the database too, so one ping every 10 minutes keeps both awake.
+# Set the repository variable API_URL (Settings -> Secrets and variables -> Actions -> Variables).
+name: Keep alive
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  ping:
+    if: ${{ vars.API_URL != '' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Ping the API health check (a cold start can take a minute)
+        run: curl --fail --silent --show-error --max-time 120 --retry 2 "${{ vars.API_URL }}/actuator/health"

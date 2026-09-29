@@ -35,6 +35,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 @Service
 @Transactional(readOnly = true)
@@ -118,8 +119,13 @@ public class ClaimQueryService {
                 : users.refs(List.of(claim.getAssignedAdjusterId())).get(claim.getAssignedAdjusterId());
         InfoRequest openRequest = infoRequests.findByClaimIdAndStatus(claim.getId(), InfoRequest.Status.OPEN)
                 .orElse(null);
-        return new ClaimDetails(claim, adjuster, openRequest, ClaimAction.allowed(claim, user.id(), user.role()),
-                financials.position(claim.getId()).totalPaid());
+        ClaimFinancialsPort.Position money = financials.position(claim.getId());
+        Set<ClaimAction> allowed = ClaimAction.allowed(claim, user.id(), user.role());
+        if (money.anyPaymentIssued() || money.pendingItems() > 0) {
+            // the status allows it, the money doesn't (BUG-014): never offer a button the server will refuse
+            allowed.remove(ClaimAction.WITHDRAW);
+        }
+        return new ClaimDetails(claim, adjuster, openRequest, allowed, money.totalPaid());
     }
 
     public record QueuePage(Page<Claim> claims, Map<Long, UserRef> adjusters) {

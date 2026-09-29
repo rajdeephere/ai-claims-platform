@@ -1,6 +1,7 @@
 package com.claimsai.identity;
 
 import com.claimsai.common.error.ApiError;
+import com.claimsai.identity.api.AuthDtos;
 import com.claimsai.identity.api.AuthDtos.LoginRequest;
 import com.claimsai.identity.api.AuthDtos.MeResponse;
 import com.claimsai.identity.api.AuthDtos.RefreshRequest;
@@ -35,6 +36,17 @@ class AuthApiIT extends IntegrationTest {
         assertThat(me.getBody().username()).isEqualTo("adjuster1");
         assertThat(me.getBody().role()).isEqualTo(Role.ADJUSTER);
         assertThat(me.getBody().authorityLimit()).isEqualByComparingTo(new BigDecimal("5000.00"));
+    }
+
+    @Test
+    void aSupervisorCanListTheAdjustersToReassignTo() {
+        AuthDtos.UserSummary[] adjusters = get("supervisor1", "/api/v1/users?role=ADJUSTER", AuthDtos.UserSummary[].class)
+                .getBody();
+
+        assertThat(adjusters).extracting(AuthDtos.UserSummary::username).contains("adjuster1", "adjuster2");
+        assertThat(adjusters).allSatisfy(u -> assertThat(u.role()).isEqualTo(Role.ADJUSTER));
+        assertThat(get("adjuster1", "/api/v1/users?role=ADJUSTER", String.class).getStatusCode())
+                .isEqualTo(HttpStatus.FORBIDDEN);
     }
 
     @Test

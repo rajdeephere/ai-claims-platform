@@ -184,6 +184,24 @@ No module calls the activity module: tasks follow from events
 `SiuReferralPort` and SIU implements it; investigators see only claims with a case
 ([ADR-0026](adr/0026-siu-cases-behind-a-port-with-case-based-visibility.md)).
 
+## Web app (phase 8)
+
+```mermaid
+flowchart LR
+  subgraph SPA["Angular 21 · Vercel"]
+    G["guards per role"] --> F["features: portal, staff workspace,<br/>approvals, activities, SIU"]
+    F --> C["typed clients<br/>(types generated from api.v1.json)"]
+    C --> I["interceptor: token + correlation ID<br/>401 → single-flight refresh → retry"]
+  end
+  I -- "REST · If-Match · Idempotency-Key" --> API["API · Render"]
+  F -. "presigned PUT (no token)" .-> S[("Storage")]
+```
+
+The UI renders the server's `allowedActions` and sends back the ETag it read. It holds the access token
+in memory and the refresh token in sessionStorage
+([ADR-0029](adr/0029-spa-token-handling-and-a-typed-client-from-the-contract.md)). It calls the API
+directly with CORS ([ADR-0030](adr/0030-deployment-topology-and-build-time-api-url.md)).
+
 ## Key decisions
 
 See the [ADR index](adr/README.md). The most important:

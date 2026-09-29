@@ -1,4 +1,5 @@
-# push -> build + unit tests -> integration tests (Testcontainers) + contract check + coverage -> Docker image
+# push -> backend: build + unit tests -> integration tests (Testcontainers) + contract check + coverage -> Docker image
+#      -> frontend: API types match the contract, unit tests, production build
 name: CI
 
 on:
@@ -64,6 +65,30 @@ jobs:
           name: coverage
           path: backend/target/site/jacoco/
           retention-days: 7
+
+  frontend:
+    name: Frontend build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - name: API types are generated from the committed contract
+        run: |
+          npm run api:types
+          git diff --exit-code -- src/app/core/api/api.schema.d.ts             || (echo "::error::api.schema.d.ts is out of date: run npm run api:types" && exit 1)
+      - name: Unit tests
+        run: npm test
+      - name: Production build
+        run: npx ng build
 
   docker:
     name: Docker image

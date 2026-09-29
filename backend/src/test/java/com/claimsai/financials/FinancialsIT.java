@@ -365,6 +365,9 @@ class FinancialsIT extends IntegrationTest {
                 etag("claimant1", "/api/v1/portal/claims/" + claim.id()), new WithdrawRequest("never mind"),
                 ApiError.class), HttpStatus.UNPROCESSABLE_ENTITY);
         assertThat(withdraw.code()).isEqualTo("PAYMENT_ALREADY_ISSUED");
+        // ... and the claimant is never offered the button in the first place (BUG-014)
+        assertThat(get("claimant1", "/api/v1/portal/claims/" + claim.id(), PortalClaimResponse.class).getBody()
+                .allowedActions()).doesNotContain(com.claimsai.claim.domain.ClaimAction.WITHDRAW);
     }
 
     @Test

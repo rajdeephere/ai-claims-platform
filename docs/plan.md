@@ -13,7 +13,7 @@ ADRs, and a commit made by the developer.
 | 5 | AI pipeline | LLM port, Groq client + stub, extraction and damage assessment, output validation, explainable fraud score, triage waits for assessments, human accept/override, login and LLM rate limits | ✅ |
 | 6 | Money and approvals | Exposures, reserves, payments, authority limits, maker-checker approvals, payment port with idempotency, denial requests, recoveries | ✅ |
 | 7 | SIU, information requests, SLA | SIU cases behind a port (rule and manual referral, outcome, denial proposal), information-request timers and cancel, activities from events with SLA escalation, stuck payments as tasks, supervisor dashboard | ✅ |
-| 8 | UI and deployment | Angular portal and staff workspace (theme supplied), Vercel + Render + Supabase deployment, keep-alive | ⏳ |
+| 8 | UI and deployment | Angular 21 portal and staff workspace in the team theme, types from the contract, single-flight token refresh; Render Blueprint, Vercel config, keep-alive, [deployment guide](deployment.md) | ✅ (first deploy: run by the developer) |
 
 ## Definition of done (every phase)
 

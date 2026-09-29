@@ -22,7 +22,8 @@ engine, and the whole system is designed to run on free-tier hosting.
 Java 17 · Spring Boot 3.5 · Spring Security (JWT) · Spring Data JPA · PostgreSQL 16 · Flyway ·
 S3 API (AWS SDK v2; SeaweedFS locally, Supabase Storage in the cloud) · Apache Tika · PDFBox · Groq LLM
 (OpenAI-compatible API) · Bucket4j · springdoc OpenAPI ·
-JUnit 5 · Testcontainers · ArchUnit · Awaitility · Docker · GitHub Actions · Angular (phase 8) ·
+JUnit 5 · Testcontainers · ArchUnit · Awaitility · Docker · GitHub Actions · Angular 21 (signals, zoneless) ·
+Tailwind · Angular Material · Vitest · openapi-typescript ·
 Vercel, Render, Supabase, Groq
 
 ## Run locally
@@ -75,6 +76,12 @@ nobody approves their own request. See [phase 6](docs/phases/phase-06-financials
 unanswered questions, investigations, payments the bank never confirmed) appears as activities at
 `/api/v1/activities`. Breached SLAs show on `/api/v1/dashboard/supervisor`. See
 [phase 7](docs/phases/phase-07-siu-activities-sla.md).
+
+**Web app:** `cd frontend && npm ci && npm start`, then open http://localhost:4200 and use the demo
+buttons on the login page. See [frontend/README.md](frontend/README.md).
+
+**Deploy** (free tiers, no card): Supabase → Render (`render.yaml`) → Vercel (`frontend/vercel.json`), step by
+step in [docs/deployment.md](docs/deployment.md).
 
 Demo policies are listed in [phase 2](docs/phases/phase-02-claim-core.md#demo-policies).
 
