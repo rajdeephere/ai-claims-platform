@@ -7,6 +7,7 @@ import com.claimsai.claim.domain.ClaimFinancialsPort;
 import com.claimsai.claim.domain.ClaimNote;
 import com.claimsai.claim.domain.ClaimTransition;
 import com.claimsai.claim.domain.InfoRequest;
+import com.claimsai.claim.domain.SiuReferralPort;
 import com.claimsai.claim.infra.ClaimNoteRepository;
 import com.claimsai.claim.infra.ClaimRepository;
 import com.claimsai.claim.infra.InfoRequestRepository;
@@ -41,11 +42,14 @@ public class ClaimCommandService {
     private final ClaimAuditTrail auditTrail;
     private final UserService users;
     private final ClaimFinancialsPort financials;
+    private final SiuReferralPort siu;
+    private final InfoRequestTimers timers;
     private final Clock clock;
 
     public ClaimCommandService(ClaimRepository claims, InfoRequestRepository infoRequests, ClaimNoteRepository notes,
                                ClaimAccess access, ClaimAuditTrail auditTrail, UserService users,
-                               ClaimFinancialsPort financials, Clock clock) {
+                               ClaimFinancialsPort financials, SiuReferralPort siu, InfoRequestTimers timers,
+                               Clock clock) {
         this.claims = claims;
         this.infoRequests = infoRequests;
         this.notes = notes;
@@ -53,6 +57,8 @@ public class ClaimCommandService {
         this.auditTrail = auditTrail;
         this.users = users;
         this.financials = financials;
+        this.siu = siu;
+        this.timers = timers;
         this.clock = clock;
     }
 
@@ -65,6 +71,7 @@ public class ClaimCommandService {
         // race hits the one-open-request unique index: a 500 instead of a clean 409.
         claims.flush();
         InfoRequest request = infoRequests.save(new InfoRequest(claim.getId(), message, user.id(), now));
+        timers.schedule(request);
         auditTrail.infoRequested(claim, request.getId(), message, actor(user));
         auditTrail.transition(claim, transition, actor(user), null);
         return flushed(claim);
@@ -76,8 +83,47 @@ public class ClaimCommandService {
         ClaimTransition transition = claim.informationReceived(now);
         InfoRequest request = openRequest(claim);
         request.answer(message, user.id(), now);
+        timers.cancel(request);
         auditTrail.event(claim, "INFO_RECEIVED", actor(user), null, Map.of("infoRequestId", request.getId()), message);
         auditTrail.transition(claim, transition, actor(user), null);
+        return flushed(claim);
+    }
+
+    /** The adjuster withdraws their question (e.g. the claimant answered by phone). */
+    public Claim cancelInformationRequest(Long claimId, String ifMatch, String reason, CurrentUser user) {
+        Claim claim = load(claimId, ifMatch, ClaimAction.CANCEL_INFO_REQUEST, user);
+        Instant now = clock.instant();
+        ClaimTransition transition = claim.informationRequestCancelled(now);
+        InfoRequest request = openRequest(claim);
+        request.cancel(now);
+        timers.cancel(request);
+        auditTrail.event(claim, "INFO_REQUEST_CANCELLED", actor(user), null, Map.of("infoRequestId", request.getId()),
+                reason);
+        auditTrail.transition(claim, transition, actor(user), reason);
+        return flushed(claim);
+    }
+
+    /** OPEN -> SIU_REVIEW by a person (the triage rule refers at intake). Opens the SIU case with it. */
+    public Claim referToSiu(Long claimId, String ifMatch, String reason, CurrentUser user) {
+        Claim claim = load(claimId, ifMatch, ClaimAction.REFER_TO_SIU, user);
+        ClaimTransition transition = claim.referToSiu(clock.instant());
+        // parent first (BUG-003): a lost race is a clean 409 on the claim, not the one-open-case index
+        claims.flush();
+        siu.openCase(claim.getId(), SiuReferralPort.Source.MANUAL, reason, user.id(), user.username(),
+                claim.getFraudScore());
+        auditTrail.transition(claim, transition, actor(user), reason);
+        return flushed(claim);
+    }
+
+    /**
+     * SIU_REVIEW -> OPEN when an investigator records the outcome. Called inside the SIU module's
+     * transaction; the investigator is the actor of record.
+     */
+    @Transactional(propagation = Propagation.MANDATORY)
+    public Claim completeSiuReview(Long claimId, Long investigatorId, String investigatorName, String outcome) {
+        Claim claim = claims.findById(claimId).orElseThrow();
+        ClaimTransition transition = claim.siuReviewCompleted(clock.instant());
+        auditTrail.transition(claim, transition, new AuditActor(investigatorId, investigatorName), "SIU outcome: " + outcome);
         return flushed(claim);
     }
 
@@ -91,7 +137,10 @@ public class ClaimCommandService {
         }
         ClaimTransition transition = claim.withdraw(money.anyPaymentIssued(), now);
         financials.releaseOpenExposures(claim.getId(), user.id(), user.username(), "claim withdrawn");
-        infoRequests.findByClaimIdAndStatus(claim.getId(), InfoRequest.Status.OPEN).ifPresent(r -> r.cancel(now));
+        infoRequests.findByClaimIdAndStatus(claim.getId(), InfoRequest.Status.OPEN).ifPresent(r -> {
+            r.cancel(now);
+            timers.cancel(r);
+        });
         auditTrail.transition(claim, transition, actor(user), reason);
         return flushed(claim);
     }
@@ -144,7 +193,7 @@ public class ClaimCommandService {
         Long previous = claim.assignTo(adjusterId, clock.instant());
         Map<String, Object> before = new HashMap<>();
         before.put("adjusterId", previous);
-        auditTrail.event(claim, "CLAIM_ASSIGNED", actor(user), before, Map.of("adjusterId", adjusterId), reason);
+        auditTrail.assigned(claim, previous, actor(user), before, reason);
         return flushed(claim);
     }
 

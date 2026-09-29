@@ -16,6 +16,9 @@ import java.util.Set;
  */
 public enum ClaimAction {
     REQUEST_INFO(Set.of(ClaimStatus.OPEN)),
+    CANCEL_INFO_REQUEST(Set.of(ClaimStatus.AWAITING_INFO)),
+    /** Manual referral; the triage rule refers at intake without a person. */
+    REFER_TO_SIU(Set.of(ClaimStatus.OPEN)),
     CLOSE(Set.of(ClaimStatus.OPEN)),
     ADD_NOTE(EnumSet.allOf(ClaimStatus.class)),
     REASSIGN(EnumSet.complementOf(EnumSet.of(ClaimStatus.CLOSED))),
@@ -49,13 +52,13 @@ public enum ClaimAction {
      */
     public boolean permits(Role role, boolean assignee, boolean owner) {
         return switch (this) {
-            case REQUEST_INFO, CLOSE -> role == Role.ADJUSTER && assignee;
+            case REQUEST_INFO, CANCEL_INFO_REQUEST, CLOSE -> role == Role.ADJUSTER && assignee;
             case ADD_NOTE -> role.isStaff();
             case REASSIGN, REOPEN -> role == Role.SUPERVISOR;
             case RESPOND, WITHDRAW -> role == Role.CLAIMANT && owner;
             case UPLOAD_DOCUMENT -> (role == Role.CLAIMANT && owner) || (role == Role.ADJUSTER && assignee)
                     || role == Role.SUPERVISOR;
-            case REVIEW_AI, MANAGE_EXPOSURES, REQUEST_PAYMENT, RECORD_RECOVERY ->
+            case REVIEW_AI, MANAGE_EXPOSURES, REQUEST_PAYMENT, RECORD_RECOVERY, REFER_TO_SIU ->
                     (role == Role.ADJUSTER && assignee) || role == Role.SUPERVISOR;
             case REQUEST_DENIAL -> role == Role.ADJUSTER && assignee;
         };

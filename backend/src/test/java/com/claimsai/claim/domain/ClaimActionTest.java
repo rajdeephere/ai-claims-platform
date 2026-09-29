@@ -6,6 +6,8 @@ import org.junit.jupiter.api.Test;
 import java.util.EnumSet;
 
 import static com.claimsai.claim.domain.ClaimAction.ADD_NOTE;
+import static com.claimsai.claim.domain.ClaimAction.CANCEL_INFO_REQUEST;
+import static com.claimsai.claim.domain.ClaimAction.REFER_TO_SIU;
 import static com.claimsai.claim.domain.ClaimAction.MANAGE_EXPOSURES;
 import static com.claimsai.claim.domain.ClaimAction.RECORD_RECOVERY;
 import static com.claimsai.claim.domain.ClaimAction.REQUEST_DENIAL;
@@ -32,7 +34,18 @@ class ClaimActionTest {
         Claim claim = ClaimTest.open();   // filed by user 1, assigned to user 3
 
         assertThat(ClaimAction.allowed(claim, ADJUSTER, Role.ADJUSTER)).containsExactlyInAnyOrder(REQUEST_INFO, CLOSE, ADD_NOTE,
-                UPLOAD_DOCUMENT, REVIEW_AI, MANAGE_EXPOSURES, REQUEST_PAYMENT, REQUEST_DENIAL, RECORD_RECOVERY);
+                UPLOAD_DOCUMENT, REVIEW_AI, MANAGE_EXPOSURES, REQUEST_PAYMENT, REQUEST_DENIAL, RECORD_RECOVERY,
+                REFER_TO_SIU);
+    }
+
+    @Test
+    void whileWaitingForTheClaimantTheAdjusterCanWithdrawTheQuestion() {
+        Claim claim = ClaimTest.open();
+        claim.requestInformation(ClaimTest.NOW);
+
+        assertThat(ClaimAction.allowed(claim, ADJUSTER, Role.ADJUSTER)).contains(CANCEL_INFO_REQUEST)
+                .doesNotContain(REQUEST_INFO, REFER_TO_SIU, REQUEST_PAYMENT);
+        assertThat(ClaimAction.allowed(claim, SUPERVISOR, Role.SUPERVISOR)).doesNotContain(CANCEL_INFO_REQUEST);
     }
 
     @Test
@@ -44,7 +57,8 @@ class ClaimActionTest {
     void supervisorReassignsButNeverClosesForTheAdjuster() {
         assertThat(ClaimAction.allowed(ClaimTest.open(), SUPERVISOR, Role.SUPERVISOR))
                 .containsExactlyInAnyOrder(REASSIGN, ADD_NOTE, UPLOAD_DOCUMENT, REVIEW_AI, MANAGE_EXPOSURES,
-                        REQUEST_PAYMENT, RECORD_RECOVERY);   // denials: proposed by the adjuster, decided by her
+                        REQUEST_PAYMENT, RECORD_RECOVERY, REFER_TO_SIU);   // denials: proposed by the adjuster,
+                                                                            // decided by a supervisor
     }
 
     @Test
@@ -81,11 +95,11 @@ class ClaimActionTest {
         claim.referToSiu(ClaimTest.NOW);
 
         assertThat(ClaimAction.allowed(claim, ADJUSTER, Role.ADJUSTER))
-                .contains(MANAGE_EXPOSURES).doesNotContain(REQUEST_PAYMENT, REQUEST_DENIAL, CLOSE);
+                .contains(MANAGE_EXPOSURES).doesNotContain(REQUEST_PAYMENT, REQUEST_DENIAL, CLOSE, REFER_TO_SIU);
     }
 
     @Test
-    void siuCannotChangeAClaimInPhase2() {
+    void siuInvestigatesButNeverChangesTheClaim() {
         assertThat(ClaimAction.allowed(ClaimTest.open(), 6L, Role.SIU)).isEqualTo(EnumSet.of(ADD_NOTE));
     }
 }

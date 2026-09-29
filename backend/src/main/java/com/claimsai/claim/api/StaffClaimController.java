@@ -45,7 +45,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.net.URI;
 import java.util.List;
 
-/** Claims for staff: adjusters, supervisors (and SIU from phase 7), in the full internal view. */
+/** Claims for staff: adjusters, supervisors and SIU (referred claims only), in the full internal view. */
 @RestController
 @RequestMapping("/api/v1/claims")
 @PreAuthorize("hasAnyRole('ADJUSTER', 'SUPERVISOR', 'SIU')")
@@ -123,6 +123,29 @@ public class StaffClaimController {
                                                           @Valid @RequestBody MessageRequest request) {
         CurrentUser user = currentUser.get();
         return staff(commands.requestInformation(id, ifMatch, request.message(), user), user);
+    }
+
+    @PostMapping("/{id}/cancel-info-request")
+    @Operation(operationId = "cancelInformationRequest", summary = "Withdraw the open information request",
+            description = "AWAITING_INFO -> OPEN (assigned adjuster); its reminder and deadlines are cancelled")
+    @DocumentedErrors({404, 409, 412, 428})
+    public ResponseEntity<StaffClaimResponse> cancelInfoRequest(@PathVariable Long id,
+                                                                @RequestHeader(name = IF_MATCH, required = false) String ifMatch,
+                                                                @Valid @RequestBody ReasonRequest request) {
+        CurrentUser user = currentUser.get();
+        return staff(commands.cancelInformationRequest(id, ifMatch, request.reason(), user), user);
+    }
+
+    @PostMapping("/{id}/refer-siu")
+    @Operation(operationId = "referClaimToSiu", summary = "Refer the claim to SIU for investigation",
+            description = "OPEN -> SIU_REVIEW (assigned adjuster or supervisor); opens an SIU case. Payments are held "
+                    + "until SIU records an outcome. The claimant keeps seeing IN_REVIEW.")
+    @DocumentedErrors({404, 409, 412, 428})
+    public ResponseEntity<StaffClaimResponse> referToSiu(@PathVariable Long id,
+                                                         @RequestHeader(name = IF_MATCH, required = false) String ifMatch,
+                                                         @Valid @RequestBody ReasonRequest request) {
+        CurrentUser user = currentUser.get();
+        return staff(commands.referToSiu(id, ifMatch, request.reason(), user), user);
     }
 
     @PostMapping("/{id}/close")

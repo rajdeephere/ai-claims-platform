@@ -59,6 +59,11 @@ public class ApprovalService {
     }
 
     @Transactional(readOnly = true)
+    public long pendingCount() {
+        return approvals.countByStatus(ApprovalRequest.Status.PENDING);
+    }
+
+    @Transactional(readOnly = true)
     public Page<ApprovalRequest> queue(ApprovalRequest.Status status, Pageable page) {
         return approvals.findByStatus(status, page);
     }

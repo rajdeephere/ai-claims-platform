@@ -12,7 +12,7 @@ ADRs, and a commit made by the developer.
 | 4 | Documents | Storage port, SeaweedFS locally (MinIO images discontinued), Supabase S3 in the cloud, presigned upload/download, content-type detection, SHA-256 de-duplication, abandoned-upload clean-up | ✅ |
 | 5 | AI pipeline | LLM port, Groq client + stub, extraction and damage assessment, output validation, explainable fraud score, triage waits for assessments, human accept/override, login and LLM rate limits | ✅ |
 | 6 | Money and approvals | Exposures, reserves, payments, authority limits, maker-checker approvals, payment port with idempotency, denial requests, recoveries | ✅ |
-| 7 | SIU, information requests, SLA | SIU cases and payment hold, request-info timers, activities and escalation, stuck payments, close and reopen | ⏳ |
+| 7 | SIU, information requests, SLA | SIU cases behind a port (rule and manual referral, outcome, denial proposal), information-request timers and cancel, activities from events with SLA escalation, stuck payments as tasks, supervisor dashboard | ✅ |
 | 8 | UI and deployment | Angular portal and staff workspace (theme supplied), Vercel + Render + Supabase deployment, keep-alive | ⏳ |
 
 ## Definition of done (every phase)

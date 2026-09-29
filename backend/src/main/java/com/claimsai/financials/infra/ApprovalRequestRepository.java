@@ -22,4 +22,6 @@ public interface ApprovalRequestRepository extends JpaRepository<ApprovalRequest
 
     Optional<ApprovalRequest> findByKindAndTargetIdAndStatus(ApprovalRequest.Kind kind, Long targetId,
                                                              ApprovalRequest.Status status);
+
+    long countByStatus(ApprovalRequest.Status status);
 }

@@ -2,6 +2,7 @@ package com.claimsai.claim.app;
 
 import com.claimsai.claim.domain.Claim;
 import com.claimsai.claim.domain.ClaimAction;
+import com.claimsai.claim.domain.SiuReferralPort;
 import com.claimsai.claim.infra.ClaimRepository;
 import com.claimsai.common.error.NotFoundException;
 import com.claimsai.identity.app.CurrentUser;
@@ -21,9 +22,11 @@ import org.springframework.stereotype.Component;
 public class ClaimAccess {
 
     private final ClaimRepository claims;
+    private final SiuReferralPort siu;
 
-    public ClaimAccess(ClaimRepository claims) {
+    public ClaimAccess(ClaimRepository claims, SiuReferralPort siu) {
         this.claims = claims;
+        this.siu = siu;
     }
 
     public Claim loadVisible(Long claimId, CurrentUser user) {
@@ -32,13 +35,13 @@ public class ClaimAccess {
                 .orElseThrow(() -> new NotFoundException("CLAIM_NOT_FOUND", "Claim " + claimId + " not found"));
     }
 
-    static boolean canSee(Claim claim, CurrentUser user) {
+    boolean canSee(Claim claim, CurrentUser user) {
         return switch (user.role()) {
             case CLAIMANT -> claim.isFiledBy(user.id());
             // their own claims, and ones they took by phone (assigned to someone else)
             case ADJUSTER -> claim.isAssignedTo(user.id()) || user.id().equals(claim.getReportedByUserId());
             case SUPERVISOR -> true;
-            case SIU -> false;   // phase 7: claims with an SIU case
+            case SIU -> siu.hasCase(claim.getId());   // referred claims only, also after the case is decided
         };
     }
 

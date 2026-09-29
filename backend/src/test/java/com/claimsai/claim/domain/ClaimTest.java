@@ -87,6 +87,37 @@ class ClaimTest {
     }
 
     @Test
+    void anUnansweredRequestIsCancelledByTheAdjusterOrExpires() {
+        Claim claim = open();
+        claim.requestInformation(NOW);
+        assertThat(claim.informationRequestCancelled(NOW).to()).isEqualTo(ClaimStatus.OPEN);
+
+        claim.requestInformation(NOW);
+        assertThat(claim.informationRequestExpired(NOW).from()).isEqualTo(ClaimStatus.AWAITING_INFO);
+        assertThatThrownBy(() -> claim.informationRequestExpired(NOW)).isInstanceOf(InvalidTransitionException.class);
+    }
+
+    @Test
+    void referringToSiuActsOnTheHighFraudScoreFlag() {
+        Claim claim = open();
+        claim.flagHighFraudScore(NOW);
+
+        claim.referToSiu(NOW);
+
+        assertThat(claim.getStatus()).isEqualTo(ClaimStatus.SIU_REVIEW);
+        assertThat(claim.getFlags()).doesNotContain(ClaimFlag.HIGH_FRAUD_SCORE);
+    }
+
+    @Test
+    void anInformationRequestIsDecidedOnce() {
+        InfoRequest request = new InfoRequest(1L, "Please send the repair estimate", 3L, NOW);
+        request.expire(NOW);
+
+        assertThat(request.getStatus()).isEqualTo(InfoRequest.Status.EXPIRED);
+        assertThatThrownBy(() -> request.answer("here it is", 1L, NOW)).isInstanceOf(IllegalStateException.class);
+    }
+
+    @Test
     void closeSetsTheOutcomeAndReopenClearsIt() {
         Claim claim = open();
 

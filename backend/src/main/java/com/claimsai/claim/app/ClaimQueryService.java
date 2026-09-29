@@ -27,6 +27,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.EnumMap;
+import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -66,6 +70,43 @@ public class ClaimQueryService {
                 new NotFoundException("CLAIM_NOT_FOUND", "Claim " + claimId + " not found"));
         return new ClaimFacts(c.getId(), c.getClaimNumber(), c.getPolicyNumber(), c.getLossDate(), c.getLossType().name(),
                 c.getDescription(), c.getEstimatedLoss(), c.getStatus(), c.getClaimantUserId());
+    }
+
+    public Integer fraudScore(Long claimId) {
+        return claims.findById(claimId).map(Claim::getFraudScore).orElse(null);
+    }
+
+    /** Claim numbers for ids (for lists owned by other modules). */
+    public Map<Long, String> claimNumbers(Collection<Long> claimIds) {
+        Map<Long, String> result = new HashMap<>();
+        claims.findAllById(claimIds).forEach(c -> result.put(c.getId(), c.getClaimNumber()));
+        return result;
+    }
+
+    /** Another claim on the same policy, for an SIU investigator. */
+    public record PolicyClaim(Long claimId, String claimNumber, LocalDate lossDate, String lossType, ClaimStatus status,
+                              Integer fraudScore) {
+    }
+
+    public List<PolicyClaim> otherClaimsOnPolicy(Long claimId) {
+        Claim claim = claims.findById(claimId).orElseThrow();
+        return claims.findByPolicyNumberAndIdNotOrderByLossDateDesc(claim.getPolicyNumber(), claimId).stream()
+                .map(c -> new PolicyClaim(c.getId(), c.getClaimNumber(), c.getLossDate(), c.getLossType().name(),
+                        c.getStatus(), c.getFraudScore()))
+                .toList();
+    }
+
+    public Map<ClaimStatus, Long> countByStatus() {
+        Map<ClaimStatus, Long> result = new EnumMap<>(ClaimStatus.class);
+        for (ClaimStatus status : ClaimStatus.values()) {
+            result.put(status, 0L);
+        }
+        claims.countByStatus().forEach(row -> result.put((ClaimStatus) row[0], (Long) row[1]));
+        return result;
+    }
+
+    public long countUnassigned() {
+        return claims.countUnassigned(EnumSet.of(ClaimStatus.OPEN, ClaimStatus.AWAITING_INFO, ClaimStatus.SIU_REVIEW));
     }
 
     public ClaimDetails details(Long claimId, CurrentUser user) {

@@ -9,6 +9,7 @@ import com.claimsai.financials.domain.FinancialsEvents;
 import com.claimsai.financials.domain.Payment;
 import com.claimsai.financials.domain.PaymentRail;
 import com.claimsai.financials.domain.PaymentRail.PaymentRefusedException;
+import com.claimsai.financials.domain.PaymentRail.RailUnavailableException;
 import com.claimsai.financials.infra.ExposureRepository;
 import com.claimsai.financials.infra.PaymentRepository;
 import com.claimsai.platform.jobs.app.JobContext;
@@ -33,7 +34,8 @@ import java.util.Map;
  *   <li>the rail is called outside any transaction, with the payment's own idempotency key</li>
  *   <li>rail unavailable: the job retries with backoff, same key. The payment stays APPROVED, never FAILED:
  *       after a timeout nobody knows whether money moved, and only the rail's answer to the same key can
- *       tell. Five failed attempts land in the ops queue for a person</li>
+ *       tell. After the last attempt: a PAYMENT_STUCK event (a task for the supervisors) and the job lands
+ *       in the ops queue; retrying it there reuses the same key, so it can't pay twice</li>
  *   <li>rail refuses (account closed): FAILED, and the reserve is available again</li>
  *   <li>claim under SIU review: held, checked again in 30 minutes</li>
  *   <li>success: ISSUED + paid amount on the exposure + audit + PAYMENT_ISSUED event, in one transaction.
@@ -113,10 +115,23 @@ public class PaymentIssuing implements JobHandler {
                 current.failed(refused.getMessage());
                 audit.record("PAYMENT", paymentId, current.getClaimId(), "PAYMENT_FAILED", AuditActor.SYSTEM, null,
                         Map.of("paymentId", paymentId, "amount", current.getAmount()), refused.getMessage());
+                outbox.append(FinancialsEvents.AGGREGATE, paymentId, FinancialsEvents.PAYMENT_FAILED,
+                        event(current, claim));
             });
             return;
+        } catch (RailUnavailableException unavailable) {
+            if (job.isLastAttempt()) {
+                // still APPROVED: the money may have left. A person must check with the bank.
+                transaction.executeWithoutResult(s -> {
+                    Payment current = payments.findById(paymentId).orElseThrow();
+                    audit.record("PAYMENT", paymentId, current.getClaimId(), "PAYMENT_STATUS_UNKNOWN", AuditActor.SYSTEM,
+                            null, Map.of("paymentId", paymentId, "attempts", job.attempt()), unavailable.getMessage());
+                    outbox.append(FinancialsEvents.AGGREGATE, paymentId, FinancialsEvents.PAYMENT_STUCK,
+                            event(current, claim));
+                });
+            }
+            throw unavailable;   // the job queue retries with the same idempotency key (or marks the job FAILED)
         }
-        // RailUnavailableException propagates: the job queue retries with the same idempotency key
 
         transaction.executeWithoutResult(s -> {
             Payment current = payments.findById(paymentId).orElseThrow();
@@ -125,15 +140,21 @@ public class PaymentIssuing implements JobHandler {
             current.issued(reference, clock.instant());
             audit.record("PAYMENT", paymentId, current.getClaimId(), "PAYMENT_ISSUED", AuditActor.SYSTEM, null,
                     Map.of("paymentId", paymentId, "amount", current.getAmount(), "reference", reference), null);
-            Map<String, Object> event = new HashMap<>();
-            event.put(FinancialsEvents.CLAIM_ID, current.getClaimId());
-            event.put(FinancialsEvents.CLAIM_NUMBER, claim.claimNumber());
-            event.put(FinancialsEvents.AMOUNT, current.getAmount());
-            event.put(FinancialsEvents.PAYEE, current.getPayeeName());
-            if (claim.claimantUserId() != null) {
-                event.put(FinancialsEvents.CLAIMANT_USER_ID, claim.claimantUserId());
-            }
-            outbox.append(FinancialsEvents.AGGREGATE, paymentId, FinancialsEvents.PAYMENT_ISSUED, event);
+            outbox.append(FinancialsEvents.AGGREGATE, paymentId, FinancialsEvents.PAYMENT_ISSUED, event(current, claim));
         });
+    }
+
+    private static Map<String, Object> event(Payment payment, ClaimFacts claim) {
+        Map<String, Object> event = new HashMap<>();
+        event.put(FinancialsEvents.CLAIM_ID, payment.getClaimId());
+        event.put(FinancialsEvents.CLAIM_NUMBER, claim.claimNumber());
+        event.put(FinancialsEvents.PAYMENT_ID, payment.getId());
+        // money as a string: a JSON number comes back as a double, and "3800.0" is not an amount (BUG-012)
+        event.put(FinancialsEvents.AMOUNT, payment.getAmount().toPlainString());
+        event.put(FinancialsEvents.PAYEE, payment.getPayeeName());
+        if (claim.claimantUserId() != null) {
+            event.put(FinancialsEvents.CLAIMANT_USER_ID, claim.claimantUserId());
+        }
+        return event;
     }
 }

@@ -27,5 +27,8 @@
 | [0023](0023-rate-limits-for-login-and-llm-calls.md) | Rate limits for failed logins and outbound LLM calls | Accepted | 5 |
 | [0024](0024-financials-exposures-reserves-payments-and-maker-checker.md) | Financials: exposures, reserves, payments, maker-checker, idempotent payment rail | Accepted | 6 |
 | [0025](0025-pessimistic-lock-on-the-exposure-for-payments.md) | A pessimistic row lock on the exposure for payments | Accepted | 6 |
+| [0026](0026-siu-cases-behind-a-port-with-case-based-visibility.md) | SIU cases behind a port, with case-based visibility | Accepted | 7 |
+| [0027](0027-activities-from-events-with-sla-timers.md) | Activities created from events, with SLA timers; information-request deadlines | Accepted | 7 |
+| [0028](0028-money-in-event-payloads-as-strings.md) | Money in event payloads is a string | Accepted | 7 |
 
 New ADRs use [template.md](template.md).

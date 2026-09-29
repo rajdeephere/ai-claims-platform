@@ -11,6 +11,7 @@ import com.claimsai.claim.domain.PolicyCheck;
 import com.claimsai.claim.domain.RiskAssessmentPort;
 import com.claimsai.claim.domain.RiskAssessmentPort.ClaimRiskFacts;
 import com.claimsai.claim.domain.RiskAssessmentPort.RiskAssessment;
+import com.claimsai.claim.domain.SiuReferralPort;
 import com.claimsai.claim.domain.TriageRules;
 import com.claimsai.claim.infra.ClaimRepository;
 import com.claimsai.platform.jobs.app.JobService;
@@ -32,7 +33,7 @@ import java.util.Optional;
 /**
  * The system's steps on a new claim, run as jobs (ADR-0018, ADR-0021):
  * <pre>
- * FNOL ── VERIFY_POLICY ──> ASSESSING ── (document grace) ── COMPLETE_ASSESSMENT ──> OPEN / SIU_REVIEW
+ * FNOL ── VERIFY_POLICY ──> ASSESSING ── (document grace) ── COMPLETE_ASSESSMENT ──> OPEN / SIU_REVIEW (+ SIU case)
  *                                 │                            │ waits while documents are being assessed
  *                                 └── ASSESSMENT_TIMEOUT (timer): moves on without the missing assessments
  * </pre>
@@ -53,6 +54,7 @@ public class ClaimIntakeService {
     private final ClaimAuditTrail auditTrail;
     private final JobService jobs;
     private final RiskAssessmentPort risk;
+    private final SiuReferralPort siu;
     private final TriageProperties triage;
     private final Duration assessmentTimeout;
     private final Duration documentGrace;
@@ -60,7 +62,7 @@ public class ClaimIntakeService {
     private final Clock clock;
 
     public ClaimIntakeService(ClaimRepository claims, AssignmentService assignment, ClaimAuditTrail auditTrail,
-                              JobService jobs, RiskAssessmentPort risk, TriageProperties triage,
+                              JobService jobs, RiskAssessmentPort risk, SiuReferralPort siu, TriageProperties triage,
                               @Value("${app.intake.assessment-timeout}") Duration assessmentTimeout,
                               @Value("${app.intake.document-grace}") Duration documentGrace,
                               @Value("${app.intake.assessment-recheck}") Duration recheckInterval, Clock clock) {
@@ -69,6 +71,7 @@ public class ClaimIntakeService {
         this.auditTrail = auditTrail;
         this.jobs = jobs;
         this.risk = risk;
+        this.siu = siu;
         this.triage = triage;
         this.assessmentTimeout = assessmentTimeout;
         this.documentGrace = documentGrace;
@@ -144,12 +147,14 @@ public class ClaimIntakeService {
         triaged.put("referToSiu", decision.referToSiu());
         auditTrail.event(claim, "CLAIM_TRIAGED", AuditActor.SYSTEM, null, triaged, decision.reason());
         auditTrail.transition(claim, transition, AuditActor.SYSTEM, null);
+        if (decision.referToSiu()) {
+            siu.openCase(claimId, SiuReferralPort.Source.RULE, decision.reason(), null, null, claim.getFraudScore());
+        }
 
         Optional<Long> adjuster = assignment.leastLoadedAdjuster();
         if (adjuster.isPresent()) {
             claim.assignTo(adjuster.get(), now);
-            auditTrail.event(claim, "CLAIM_ASSIGNED", AuditActor.SYSTEM, null, Map.of("adjusterId", adjuster.get()),
-                    "least open claims");
+            auditTrail.assigned(claim, null, AuditActor.SYSTEM, null, "least open claims");
         } else {
             claim.markUnassigned(now);
             auditTrail.event(claim, "CLAIM_UNASSIGNED", AuditActor.SYSTEM, null, null, "no active adjuster");
@@ -178,8 +183,7 @@ public class ClaimIntakeService {
         if (claim.getFraudScore() >= threshold && (before == null || before < threshold)
                 && claim.getStatus() != ClaimStatus.SIU_REVIEW) {
             claim.flagHighFraudScore(now);
-            auditTrail.event(claim, "HIGH_FRAUD_SCORE", AuditActor.SYSTEM, null,
-                    Map.of("fraudScore", claim.getFraudScore()), "score reached the SIU threshold " + threshold);
+            auditTrail.highFraudScore(claim, threshold);
         }
     }
 

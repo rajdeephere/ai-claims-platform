@@ -64,7 +64,44 @@ public class ClaimAuditTrail {
                 Map.of("infoRequestId", infoRequestId), message);
         Map<String, Object> event = base(claim);
         event.put(ClaimEvents.MESSAGE, message);
+        event.put(ClaimEvents.INFO_REQUEST_ID, infoRequestId);
         outbox.append(ClaimEvents.AGGREGATE, claim.getId(), ClaimEvents.INFO_REQUESTED, event);
+    }
+
+    /** A timer on an unanswered information request fired (reminder, overdue or expired). */
+    public void infoRequestTimer(Claim claim, String eventType, Long infoRequestId, String message) {
+        audit.record(ENTITY, claim.getId(), claim.getId(), eventType, AuditActor.SYSTEM, null,
+                Map.of("infoRequestId", infoRequestId), null);
+        Map<String, Object> event = base(claim);
+        event.put(ClaimEvents.MESSAGE, message);
+        event.put(ClaimEvents.INFO_REQUEST_ID, infoRequestId);
+        outbox.append(ClaimEvents.AGGREGATE, claim.getId(), eventType, event);
+    }
+
+    /**
+     * Assigned at intake (before is null) or reassigned. Activities follow the adjuster through the event.
+     *
+     * @param previous the adjuster before, or null
+     */
+    public void assigned(Claim claim, Long previous, AuditActor actor, Map<String, Object> before, String reason) {
+        audit.record(ENTITY, claim.getId(), claim.getId(), "CLAIM_ASSIGNED", actor, before,
+                Map.of("adjusterId", claim.getAssignedAdjusterId()), reason);
+        Map<String, Object> event = base(claim);
+        if (previous != null) {
+            event.put(ClaimEvents.PREVIOUS_ADJUSTER_ID, previous);
+        }
+        if (claim.getSegment() != null) {
+            event.put(ClaimEvents.SEGMENT, claim.getSegment().name());
+        }
+        outbox.append(ClaimEvents.AGGREGATE, claim.getId(), ClaimEvents.CLAIM_ASSIGNED, event);
+    }
+
+    public void highFraudScore(Claim claim, int threshold) {
+        audit.record(ENTITY, claim.getId(), claim.getId(), "HIGH_FRAUD_SCORE", AuditActor.SYSTEM, null,
+                Map.of("fraudScore", claim.getFraudScore()), "score reached the SIU threshold " + threshold);
+        Map<String, Object> event = base(claim);
+        event.put(ClaimEvents.FRAUD_SCORE, claim.getFraudScore());
+        outbox.append(ClaimEvents.AGGREGATE, claim.getId(), ClaimEvents.HIGH_FRAUD_SCORE, event);
     }
 
     public void event(Claim claim, String action, AuditActor actor, Map<String, Object> before,
@@ -78,6 +115,9 @@ public class ClaimAuditTrail {
         payload.put(ClaimEvents.CLAIM_NUMBER, claim.getClaimNumber());
         if (claim.getClaimantUserId() != null) {
             payload.put(ClaimEvents.CLAIMANT_USER_ID, claim.getClaimantUserId());
+        }
+        if (claim.getAssignedAdjusterId() != null) {
+            payload.put(ClaimEvents.ASSIGNED_ADJUSTER_ID, claim.getAssignedAdjusterId());
         }
         return payload;
     }

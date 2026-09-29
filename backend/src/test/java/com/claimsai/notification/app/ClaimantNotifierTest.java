@@ -52,6 +52,26 @@ class ClaimantNotifierTest {
     }
 
     @Test
+    void anUnansweredQuestionGetsAReminderAndThenAClosingNote() {
+        assertThat(ClaimantNotifier.messageFor(event("INFO_REQUEST_REMINDER", Map.of("message", "Photos please")))).get()
+                .satisfies(m -> {
+                    assertThat(m.subject()).isEqualTo("Reminder: action needed on claim CLM-2026-000007");
+                    assertThat(m.body()).endsWith("Photos please");
+                });
+        assertThat(ClaimantNotifier.messageFor(event("INFO_REQUEST_EXPIRED", Map.of("message", "Photos please"))))
+                .isPresent();
+        // the supervisors' follow-up is internal
+        assertThat(ClaimantNotifier.messageFor(event("INFO_REQUEST_OVERDUE", Map.of("message", "Photos please"))))
+                .isEmpty();
+    }
+
+    @Test
+    void siuEventsCanNeverReachTheClaimant() {
+        assertThat(new ClaimantNotifier(mock(NotificationRepository.class), Clock.systemUTC()).eventTypes())
+                .doesNotContain("SIU_CASE_OPENED", "SIU_CASE_DECIDED", "INFO_REQUEST_OVERDUE", "HIGH_FRAUD_SCORE");
+    }
+
+    @Test
     void awaitingInfoIsCoveredByTheQuestionItself() {
         assertThat(ClaimantNotifier.messageFor(status("OPEN", "AWAITING_INFO", null))).isEmpty();
     }

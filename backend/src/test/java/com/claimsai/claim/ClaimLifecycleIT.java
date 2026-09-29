@@ -82,8 +82,10 @@ class ClaimLifecycleIT extends IntegrationTest {
         assertThat(reopened.getBody().status()).isEqualTo(ClaimStatus.OPEN);
         assertThat(reopened.getBody().closeOutcome()).isNull();
 
+        // the claim's own history; activity entries (written by a listener, a moment later) interleave
         List<TimelineEntryResponse> timeline = List.of(get("supervisor1", staff(id) + "/timeline",
-                TimelineEntryResponse[].class).getBody());
+                TimelineEntryResponse[].class).getBody()).stream()
+                .filter(e -> !e.action().startsWith("ACTIVITY_")).toList();
         assertThat(timeline).extracting(TimelineEntryResponse::action).containsExactly(
                 "CLAIM_SUBMITTED", "POLICY_CHECKED", "STATUS_CHANGED", "FRAUD_SCORED", "CLAIM_TRIAGED", "STATUS_CHANGED",
                 "CLAIM_ASSIGNED", "INFO_REQUESTED", "STATUS_CHANGED", "INFO_RECEIVED", "STATUS_CHANGED",

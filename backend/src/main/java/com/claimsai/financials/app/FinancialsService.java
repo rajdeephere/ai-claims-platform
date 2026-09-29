@@ -1,5 +1,6 @@
 package com.claimsai.financials.app;
 
+import com.claimsai.audit.app.AuditActor;
 import com.claimsai.claim.app.ClaimAccess;
 import com.claimsai.claim.domain.Claim;
 import com.claimsai.claim.domain.ClaimAction;
@@ -25,6 +26,7 @@ import com.claimsai.platform.jobs.app.JobService;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 
@@ -226,13 +228,26 @@ public class FinancialsService {
     @Transactional
     public ApprovalRequest requestDenial(Long claimId, String reason, CurrentUser user) {
         Claim claim = access(claimId, user, ClaimAction.REQUEST_DENIAL);
+        return denialRequest(claim.getId(), reason, new AuditActor(user.id(), user.username()));
+    }
+
+    /**
+     * SIU confirmed fraud: the investigator proposes the denial, a supervisor still decides. Called inside
+     * the SIU outcome's transaction, which has already checked who may do this.
+     */
+    @Transactional(propagation = Propagation.MANDATORY)
+    public ApprovalRequest proposeDenial(Long claimId, String reason, Long requesterId, String requesterName) {
+        return denialRequest(claimId, reason, new AuditActor(requesterId, requesterName));
+    }
+
+    private ApprovalRequest denialRequest(Long claimId, String reason, AuditActor requester) {
         if (approvals.findByClaimIdAndKindAndStatus(claimId, ApprovalRequest.Kind.DENIAL, ApprovalRequest.Status.PENDING)
                 .isPresent()) {
             throw new ConflictException("APPROVAL_PENDING", "A denial for this claim is already waiting for approval");
         }
-        ApprovalRequest request = approvals.save(ApprovalRequest.pending(claim.getId(), ApprovalRequest.Kind.DENIAL,
-                null, null, reason, user.id(), clock.instant()));
-        audit.record("APPROVAL", request.getId(), claim.getId(), "APPROVAL_REQUESTED", FinancialsAudit.actor(user), null,
+        ApprovalRequest request = approvals.save(ApprovalRequest.pending(claimId, ApprovalRequest.Kind.DENIAL,
+                null, null, reason, requester.userId(), clock.instant()));
+        audit.record("APPROVAL", request.getId(), claimId, "APPROVAL_REQUESTED", requester, null,
                 Map.of("kind", "DENIAL"), reason);
         return request;
     }

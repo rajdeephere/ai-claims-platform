@@ -13,6 +13,78 @@
       }
     },
     "schemas" : {
+      "ActivityResponse" : {
+        "properties" : {
+          "assignee" : {
+            "description" : "Set when the activity belongs to one person",
+            "type" : "string"
+          },
+          "candidateRole" : {
+            "description" : "Set when the activity is in a role's queue",
+            "enum" : [ "CLAIMANT", "ADJUSTER", "SUPERVISOR", "SIU" ],
+            "type" : "string"
+          },
+          "claimId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "claimNumber" : {
+            "type" : "string"
+          },
+          "completedAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "completedBy" : {
+            "description" : "null when the system closed it",
+            "type" : "string"
+          },
+          "completedByPerson" : {
+            "type" : "boolean"
+          },
+          "createdAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "dueAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "escalatedAt" : {
+            "description" : "When the SLA was breached; null if it was not",
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "id" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "linkedId" : {
+            "description" : "The info request, SIU case or payment it is about",
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "outcomeNote" : {
+            "type" : "string"
+          },
+          "priority" : {
+            "enum" : [ "NORMAL", "HIGH", "URGENT" ],
+            "type" : "string"
+          },
+          "status" : {
+            "enum" : [ "OPEN", "COMPLETED", "CANCELLED" ],
+            "type" : "string"
+          },
+          "subject" : {
+            "type" : "string"
+          },
+          "type" : {
+            "enum" : [ "FIRST_CONTACT", "CONSIDER_SIU_REFERRAL", "INFO_OVERDUE", "INFO_NO_RESPONSE", "SIU_INVESTIGATION", "PAYMENT_STATUS_UNKNOWN", "REVIEW_REOPENED" ],
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
       "AiAssessmentView" : {
         "properties" : {
           "claimId" : {
@@ -168,6 +240,71 @@
         },
         "type" : "object"
       },
+      "CaseFileResponse" : {
+        "description" : "Everything an investigator starts from; documents, AI results and the timeline are on the claim",
+        "properties" : {
+          "claim" : {
+            "$ref" : "#/components/schemas/ClaimSummary"
+          },
+          "otherClaimsOnPolicy" : {
+            "items" : {
+              "$ref" : "#/components/schemas/OtherClaim"
+            },
+            "type" : "array"
+          },
+          "siuCase" : {
+            "$ref" : "#/components/schemas/SiuCaseResponse"
+          }
+        },
+        "type" : "object"
+      },
+      "ClaimSummary" : {
+        "properties" : {
+          "claimNumber" : {
+            "type" : "string"
+          },
+          "description" : {
+            "type" : "string"
+          },
+          "estimatedLoss" : {
+            "type" : "number"
+          },
+          "fraudScore" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "id" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "lossDate" : {
+            "format" : "date",
+            "type" : "string"
+          },
+          "lossType" : {
+            "type" : "string"
+          },
+          "policyNumber" : {
+            "type" : "string"
+          },
+          "status" : {
+            "enum" : [ "SUBMITTED", "ASSESSING", "OPEN", "AWAITING_INFO", "SIU_REVIEW", "CLOSED" ],
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "CompleteRequest" : {
+        "properties" : {
+          "note" : {
+            "example" : "Called the claimant; photos promised by Friday",
+            "maxLength" : 2000,
+            "minLength" : 0,
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
       "CreateExposureRequest" : {
         "properties" : {
           "claimantName" : {
@@ -193,6 +330,45 @@
           }
         },
         "required" : [ "claimantName", "type" ],
+        "type" : "object"
+      },
+      "DashboardResponse" : {
+        "properties" : {
+          "breachedActivities" : {
+            "description" : "Open activities past their SLA",
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "breachesByOwner" : {
+            "items" : {
+              "$ref" : "#/components/schemas/OwnerCountResponse"
+            },
+            "type" : "array"
+          },
+          "claimsByStatus" : {
+            "additionalProperties" : {
+              "format" : "int64",
+              "type" : "integer"
+            },
+            "type" : "object"
+          },
+          "openActivities" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "openSiuCases" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "pendingApprovals" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "unassignedClaims" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        },
         "type" : "object"
       },
       "DecisionRequest" : {
@@ -508,6 +684,49 @@
         },
         "type" : "object"
       },
+      "OtherClaim" : {
+        "properties" : {
+          "claimNumber" : {
+            "type" : "string"
+          },
+          "fraudScore" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "id" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "lossDate" : {
+            "format" : "date",
+            "type" : "string"
+          },
+          "lossType" : {
+            "type" : "string"
+          },
+          "status" : {
+            "enum" : [ "SUBMITTED", "ASSESSING", "OPEN", "AWAITING_INFO", "SIU_REVIEW", "CLOSED" ],
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "OutcomeRequest" : {
+        "properties" : {
+          "findings" : {
+            "example" : "Invoice reused from claim CLM-2026-000112; garage denies issuing it",
+            "maxLength" : 4000,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "outcome" : {
+            "enum" : [ "CLEARED", "CONFIRMED" ],
+            "type" : "string"
+          }
+        },
+        "required" : [ "findings", "outcome" ],
+        "type" : "object"
+      },
       "OverrideRequest" : {
         "properties" : {
           "fields" : {
@@ -526,6 +745,46 @@
           }
         },
         "required" : [ "fields", "reason" ],
+        "type" : "object"
+      },
+      "OwnerCountResponse" : {
+        "properties" : {
+          "count" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "owner" : {
+            "description" : "A username, or queue:ROLE",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "PageResponseActivityResponse" : {
+        "properties" : {
+          "content" : {
+            "items" : {
+              "$ref" : "#/components/schemas/ActivityResponse"
+            },
+            "type" : "array"
+          },
+          "page" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "size" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "totalElements" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "totalPages" : {
+            "format" : "int32",
+            "type" : "integer"
+          }
+        },
         "type" : "object"
       },
       "PageResponseApprovalResponse" : {
@@ -614,6 +873,33 @@
           "content" : {
             "items" : {
               "$ref" : "#/components/schemas/PortalClaimSummary"
+            },
+            "type" : "array"
+          },
+          "page" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "size" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "totalElements" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "totalPages" : {
+            "format" : "int32",
+            "type" : "integer"
+          }
+        },
+        "type" : "object"
+      },
+      "PageResponseSiuCaseResponse" : {
+        "properties" : {
+          "content" : {
+            "items" : {
+              "$ref" : "#/components/schemas/SiuCaseResponse"
             },
             "type" : "array"
           },
@@ -738,12 +1024,27 @@
         },
         "type" : "object"
       },
+      "PersonView" : {
+        "properties" : {
+          "displayName" : {
+            "type" : "string"
+          },
+          "id" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "username" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
       "PortalClaimResponse" : {
         "description" : "A claim as its claimant sees it: no fraud score, segment, flags or internal notes",
         "properties" : {
           "allowedActions" : {
             "items" : {
-              "enum" : [ "REQUEST_INFO", "CLOSE", "ADD_NOTE", "REASSIGN", "REOPEN", "RESPOND", "WITHDRAW", "UPLOAD_DOCUMENT", "REVIEW_AI", "MANAGE_EXPOSURES", "REQUEST_PAYMENT", "REQUEST_DENIAL", "RECORD_RECOVERY" ],
+              "enum" : [ "REQUEST_INFO", "CANCEL_INFO_REQUEST", "REFER_TO_SIU", "CLOSE", "ADD_NOTE", "REASSIGN", "REOPEN", "RESPOND", "WITHDRAW", "UPLOAD_DOCUMENT", "REVIEW_AI", "MANAGE_EXPOSURES", "REQUEST_PAYMENT", "REQUEST_DENIAL", "RECORD_RECOVERY" ],
               "type" : "string"
             },
             "type" : "array",
@@ -1009,11 +1310,60 @@
         },
         "type" : "object"
       },
+      "SiuCaseResponse" : {
+        "properties" : {
+          "claimId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "claimNumber" : {
+            "type" : "string"
+          },
+          "decidedAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "findings" : {
+            "type" : "string"
+          },
+          "fraudScoreAtReferral" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "id" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "investigator" : {
+            "$ref" : "#/components/schemas/PersonView"
+          },
+          "reason" : {
+            "type" : "string"
+          },
+          "referredAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "referredBy" : {
+            "$ref" : "#/components/schemas/PersonView",
+            "description" : "null when the triage rule referred the claim"
+          },
+          "source" : {
+            "enum" : [ "RULE", "MANUAL" ],
+            "type" : "string"
+          },
+          "status" : {
+            "enum" : [ "OPEN", "CLEARED", "CONFIRMED" ],
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
       "StaffClaimResponse" : {
         "properties" : {
           "allowedActions" : {
             "items" : {
-              "enum" : [ "REQUEST_INFO", "CLOSE", "ADD_NOTE", "REASSIGN", "REOPEN", "RESPOND", "WITHDRAW", "UPLOAD_DOCUMENT", "REVIEW_AI", "MANAGE_EXPOSURES", "REQUEST_PAYMENT", "REQUEST_DENIAL", "RECORD_RECOVERY" ],
+              "enum" : [ "REQUEST_INFO", "CANCEL_INFO_REQUEST", "REFER_TO_SIU", "CLOSE", "ADD_NOTE", "REASSIGN", "REOPEN", "RESPOND", "WITHDRAW", "UPLOAD_DOCUMENT", "REVIEW_AI", "MANAGE_EXPOSURES", "REQUEST_PAYMENT", "REQUEST_DENIAL", "RECORD_RECOVERY" ],
               "type" : "string"
             },
             "type" : "array",
@@ -1430,12 +1780,296 @@
     }
   },
   "info" : {
-    "description" : "Guidewire-style claims handling: FNOL, exposures, reserves, payments, approvals, SIU and AI document assessment.\n\nAPI version **v1** (contract 1.5.0). Breaking changes get `/api/v2`; additions bump the minor version.",
+    "description" : "Guidewire-style claims handling: FNOL, exposures, reserves, payments, approvals, SIU and AI document assessment.\n\nAPI version **v1** (contract 1.6.0). Breaking changes get `/api/v2`; additions bump the minor version.",
     "title" : "AI Claims Platform API",
-    "version" : "1.5.0"
+    "version" : "1.6.0"
   },
   "openapi" : "3.1.0",
   "paths" : {
+    "/api/v1/activities" : {
+      "get" : {
+        "description" : "Assigned to me, or in my role's queue (supervisors, SIU). overdueOnly: past their due time.",
+        "operationId" : "listMyActivities",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "overdueOnly",
+          "required" : false,
+          "schema" : {
+            "default" : false,
+            "type" : "boolean"
+          }
+        }, {
+          "in" : "query",
+          "name" : "page",
+          "required" : false,
+          "schema" : {
+            "default" : 0,
+            "format" : "int32",
+            "minimum" : 0,
+            "type" : "integer"
+          }
+        }, {
+          "in" : "query",
+          "name" : "size",
+          "required" : false,
+          "schema" : {
+            "default" : 20,
+            "format" : "int32",
+            "maximum" : 100,
+            "minimum" : 1,
+            "type" : "integer"
+          }
+        }, {
+          "$ref" : "#/components/parameters/CorrelationId"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PageResponseActivityResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "400" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Invalid request: malformed body, bad parameter or failed validation (see `violations`)"
+          },
+          "401" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Missing, invalid or expired access token"
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "The user's role does not allow this action"
+          },
+          "500" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Unexpected error (details are logged with the correlation ID, never returned)"
+          }
+        },
+        "summary" : "My open activities, soonest due first",
+        "tags" : [ "Activities" ]
+      }
+    },
+    "/api/v1/activities/breached" : {
+      "get" : {
+        "operationId" : "listBreachedActivities",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "page",
+          "required" : false,
+          "schema" : {
+            "default" : 0,
+            "format" : "int32",
+            "minimum" : 0,
+            "type" : "integer"
+          }
+        }, {
+          "in" : "query",
+          "name" : "size",
+          "required" : false,
+          "schema" : {
+            "default" : 20,
+            "format" : "int32",
+            "maximum" : 100,
+            "minimum" : 1,
+            "type" : "integer"
+          }
+        }, {
+          "$ref" : "#/components/parameters/CorrelationId"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PageResponseActivityResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "400" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Invalid request: malformed body, bad parameter or failed validation (see `violations`)"
+          },
+          "401" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Missing, invalid or expired access token"
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "The user's role does not allow this action"
+          },
+          "500" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Unexpected error (details are logged with the correlation ID, never returned)"
+          }
+        },
+        "summary" : "Every open activity past its SLA, oldest due first",
+        "tags" : [ "Activities" ]
+      }
+    },
+    "/api/v1/activities/{id}/complete" : {
+      "post" : {
+        "operationId" : "completeActivity",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        }, {
+          "$ref" : "#/components/parameters/CorrelationId"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CompleteRequest"
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ActivityResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "400" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Invalid request: malformed body, bad parameter or failed validation (see `violations`)"
+          },
+          "401" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Missing, invalid or expired access token"
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "The user's role does not allow this action"
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Not found, or not visible to this user"
+          },
+          "409" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Conflicts with the current state: invalid transition, duplicate or concurrent update"
+          },
+          "422" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Well-formed, but breaks a business rule"
+          },
+          "500" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Unexpected error (details are logged with the correlation ID, never returned)"
+          }
+        },
+        "summary" : "Complete an activity (its owner, or a supervisor)",
+        "tags" : [ "Activities" ]
+      }
+    },
     "/api/v1/ai-assessments/{id}/accept" : {
       "post" : {
         "operationId" : "acceptAiAssessment",
@@ -2329,6 +2963,89 @@
         "tags" : [ "Claims" ]
       }
     },
+    "/api/v1/claims/{claimId}/activities" : {
+      "get" : {
+        "operationId" : "listClaimActivities",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "claimId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        }, {
+          "$ref" : "#/components/parameters/CorrelationId"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/ActivityResponse"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "400" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Invalid request: malformed body, bad parameter or failed validation (see `violations`)"
+          },
+          "401" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Missing, invalid or expired access token"
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "The user's role does not allow this action"
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Not found, or not visible to this user"
+          },
+          "500" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Unexpected error (details are logged with the correlation ID, never returned)"
+          }
+        },
+        "summary" : "All activities on a claim, open and closed",
+        "tags" : [ "Activities" ]
+      }
+    },
     "/api/v1/claims/{claimId}/ai-assessments" : {
       "get" : {
         "operationId" : "listClaimAiAssessments",
@@ -3168,6 +3885,89 @@
         "tags" : [ "Financials" ]
       }
     },
+    "/api/v1/claims/{claimId}/siu-cases" : {
+      "get" : {
+        "operationId" : "listClaimSiuCases",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "claimId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        }, {
+          "$ref" : "#/components/parameters/CorrelationId"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/SiuCaseResponse"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "400" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Invalid request: malformed body, bad parameter or failed validation (see `violations`)"
+          },
+          "401" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Missing, invalid or expired access token"
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "The user's role does not allow this action"
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Not found, or not visible to this user"
+          },
+          "500" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Unexpected error (details are logged with the correlation ID, never returned)"
+          }
+        },
+        "summary" : "The claim's SIU cases (staff who can see the claim)",
+        "tags" : [ "SIU" ]
+      }
+    },
     "/api/v1/claims/{id}" : {
       "get" : {
         "description" : "ETag = version; send it as If-Match on commands",
@@ -3246,6 +4046,134 @@
           }
         },
         "summary" : "Claim detail",
+        "tags" : [ "Claims" ]
+      }
+    },
+    "/api/v1/claims/{id}/cancel-info-request" : {
+      "post" : {
+        "description" : "AWAITING_INFO -> OPEN (assigned adjuster); its reminder and deadlines are cancelled",
+        "operationId" : "cancelInformationRequest",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        }, {
+          "in" : "header",
+          "name" : "If-Match",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "$ref" : "#/components/parameters/CorrelationId"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ReasonRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/StaffClaimResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "400" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Invalid request: malformed body, bad parameter or failed validation (see `violations`)"
+          },
+          "401" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Missing, invalid or expired access token"
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "The user's role does not allow this action"
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Not found, or not visible to this user"
+          },
+          "409" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Conflicts with the current state: invalid transition, duplicate or concurrent update"
+          },
+          "412" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "`If-Match` does not match the current version: reload and retry"
+          },
+          "428" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "`If-Match` is required on this request: send the ETag from your last GET"
+          },
+          "500" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Unexpected error (details are logged with the correlation ID, never returned)"
+          }
+        },
+        "summary" : "Withdraw the open information request",
         "tags" : [ "Claims" ]
       }
     },
@@ -3604,6 +4532,134 @@
         "tags" : [ "Claims" ]
       }
     },
+    "/api/v1/claims/{id}/refer-siu" : {
+      "post" : {
+        "description" : "OPEN -> SIU_REVIEW (assigned adjuster or supervisor); opens an SIU case. Payments are held until SIU records an outcome. The claimant keeps seeing IN_REVIEW.",
+        "operationId" : "referClaimToSiu",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        }, {
+          "in" : "header",
+          "name" : "If-Match",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "$ref" : "#/components/parameters/CorrelationId"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ReasonRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/StaffClaimResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "400" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Invalid request: malformed body, bad parameter or failed validation (see `violations`)"
+          },
+          "401" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Missing, invalid or expired access token"
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "The user's role does not allow this action"
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Not found, or not visible to this user"
+          },
+          "409" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Conflicts with the current state: invalid transition, duplicate or concurrent update"
+          },
+          "412" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "`If-Match` does not match the current version: reload and retry"
+          },
+          "428" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "`If-Match` is required on this request: send the ETag from your last GET"
+          },
+          "500" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Unexpected error (details are logged with the correlation ID, never returned)"
+          }
+        },
+        "summary" : "Refer the claim to SIU for investigation",
+        "tags" : [ "Claims" ]
+      }
+    },
     "/api/v1/claims/{id}/reopen" : {
       "post" : {
         "description" : "CLOSED -> OPEN (supervisor)",
@@ -3941,6 +4997,68 @@
         },
         "summary" : "Audit trail and notes, oldest first",
         "tags" : [ "Claims" ]
+      }
+    },
+    "/api/v1/dashboard/supervisor" : {
+      "get" : {
+        "operationId" : "getSupervisorDashboard",
+        "parameters" : [ {
+          "$ref" : "#/components/parameters/CorrelationId"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DashboardResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "400" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Invalid request: malformed body, bad parameter or failed validation (see `violations`)"
+          },
+          "401" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Missing, invalid or expired access token"
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "The user's role does not allow this action"
+          },
+          "500" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Unexpected error (details are logged with the correlation ID, never returned)"
+          }
+        },
+        "summary" : "Queue sizes, pending approvals, SIU cases, SLA breaches",
+        "tags" : [ "Activities" ]
       }
     },
     "/api/v1/documents/{id}/complete" : {
@@ -5895,6 +7013,289 @@
         "summary" : "Mark as read (idempotent)",
         "tags" : [ "Portal: notifications" ]
       }
+    },
+    "/api/v1/siu/cases" : {
+      "get" : {
+        "operationId" : "listSiuCases",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "status",
+          "required" : false,
+          "schema" : {
+            "default" : "OPEN",
+            "enum" : [ "OPEN", "CLEARED", "CONFIRMED" ],
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "page",
+          "required" : false,
+          "schema" : {
+            "default" : 0,
+            "format" : "int32",
+            "minimum" : 0,
+            "type" : "integer"
+          }
+        }, {
+          "in" : "query",
+          "name" : "size",
+          "required" : false,
+          "schema" : {
+            "default" : 20,
+            "format" : "int32",
+            "maximum" : 100,
+            "minimum" : 1,
+            "type" : "integer"
+          }
+        }, {
+          "$ref" : "#/components/parameters/CorrelationId"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PageResponseSiuCaseResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "400" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Invalid request: malformed body, bad parameter or failed validation (see `violations`)"
+          },
+          "401" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Missing, invalid or expired access token"
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "The user's role does not allow this action"
+          },
+          "500" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Unexpected error (details are logged with the correlation ID, never returned)"
+          }
+        },
+        "summary" : "SIU cases by status, oldest referral first (default OPEN)",
+        "tags" : [ "SIU" ]
+      }
+    },
+    "/api/v1/siu/cases/{id}" : {
+      "get" : {
+        "operationId" : "getSiuCase",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        }, {
+          "$ref" : "#/components/parameters/CorrelationId"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CaseFileResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "400" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Invalid request: malformed body, bad parameter or failed validation (see `violations`)"
+          },
+          "401" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Missing, invalid or expired access token"
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "The user's role does not allow this action"
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Not found, or not visible to this user"
+          },
+          "500" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Unexpected error (details are logged with the correlation ID, never returned)"
+          }
+        },
+        "summary" : "The case file: case, claim, other claims on the policy",
+        "tags" : [ "SIU" ]
+      }
+    },
+    "/api/v1/siu/cases/{id}/outcome" : {
+      "post" : {
+        "description" : "SIU_REVIEW -> OPEN. CONFIRMED also proposes a denial, which a supervisor decides.",
+        "operationId" : "recordSiuOutcome",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        }, {
+          "$ref" : "#/components/parameters/CorrelationId"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/OutcomeRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SiuCaseResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "400" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Invalid request: malformed body, bad parameter or failed validation (see `violations`)"
+          },
+          "401" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Missing, invalid or expired access token"
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "The user's role does not allow this action"
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Not found, or not visible to this user"
+          },
+          "409" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Conflicts with the current state: invalid transition, duplicate or concurrent update"
+          },
+          "422" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Well-formed, but breaks a business rule"
+          },
+          "500" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Unexpected error (details are logged with the correlation ID, never returned)"
+          }
+        },
+        "summary" : "Record the outcome: CLEARED or CONFIRMED, with findings",
+        "tags" : [ "SIU" ]
+      }
     }
   },
   "security" : [ {
@@ -5916,11 +7317,17 @@
     "description" : "Claim handling for staff",
     "name" : "Claims"
   }, {
+    "description" : "Tasks with an SLA, and the supervisor dashboard",
+    "name" : "Activities"
+  }, {
     "description" : "Maker-checker decisions",
     "name" : "Approvals"
   }, {
     "description" : "Upload and download documents for my claims",
     "name" : "Portal: documents"
+  }, {
+    "description" : "Fraud investigations",
+    "name" : "SIU"
   }, {
     "description" : "Background jobs",
     "name" : "Operations"

@@ -37,7 +37,7 @@ public class ClaimantNotifier implements OutboxListener {
     @Override
     public Set<String> eventTypes() {
         return Set.of(ClaimEvents.CLAIM_SUBMITTED, ClaimEvents.CLAIM_STATUS_CHANGED, ClaimEvents.INFO_REQUESTED,
-                FinancialsEvents.PAYMENT_ISSUED);
+                ClaimEvents.INFO_REQUEST_REMINDER, ClaimEvents.INFO_REQUEST_EXPIRED, FinancialsEvents.PAYMENT_ISSUED);
     }
 
     @Override
@@ -60,6 +60,10 @@ public class ClaimantNotifier implements OutboxListener {
                     "Thank you. We are checking your policy and will assign a claims adjuster shortly."));
             case ClaimEvents.INFO_REQUESTED -> Optional.of(new Message("Action needed on claim " + number,
                     event.text(ClaimEvents.MESSAGE)));
+            case ClaimEvents.INFO_REQUEST_REMINDER -> Optional.of(new Message("Reminder: action needed on claim " + number,
+                    "We are still waiting for your answer: " + event.text(ClaimEvents.MESSAGE)));
+            case ClaimEvents.INFO_REQUEST_EXPIRED -> Optional.of(new Message("We didn't hear back about claim " + number,
+                    "Your adjuster will continue with the information we have. You can still upload documents."));
             case FinancialsEvents.PAYMENT_ISSUED -> Optional.of(new Message("Payment issued on claim " + number,
                     "A payment of Rs " + event.text(FinancialsEvents.AMOUNT) + " to " + event.text(FinancialsEvents.PAYEE)
                             + " has been issued."));

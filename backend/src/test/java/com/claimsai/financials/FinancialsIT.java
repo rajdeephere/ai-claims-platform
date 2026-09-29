@@ -142,10 +142,12 @@ class FinancialsIT extends IntegrationTest {
                 .getBody();
         assertThat(portal.status()).isEqualTo(ClaimantStatus.PAID);
         assertThat(portal.amountPaid()).isEqualByComparingTo("3800");
-        eventually().until(() -> http.exchange("/api/v1/portal/notifications?size=100", HttpMethod.GET,
-                        new HttpEntity<>(headers("claimant1")),
+        NotificationView paid = eventually().until(() -> http.exchange("/api/v1/portal/notifications?size=100",
+                        HttpMethod.GET, new HttpEntity<>(headers("claimant1")),
                         new ParameterizedTypeReference<PageResponse<NotificationView>>() { }).getBody().content().stream()
-                .anyMatch(n -> claim.id().equals(n.claimId()) && n.subject().startsWith("Payment issued")));
+                .filter(n -> claim.id().equals(n.claimId()) && n.subject().startsWith("Payment issued")).findFirst()
+                .orElse(null), java.util.Objects::nonNull);
+        assertThat(paid.body()).isEqualTo("A payment of Rs 3800.00 to City Motors Pvt Ltd has been issued.");   // BUG-012
     }
 
     @Test
@@ -368,14 +370,38 @@ class FinancialsIT extends IntegrationTest {
     @Test
     void theReserveCantBeLoweredBelowWhatIsPaidOrBeingPaid() {
         OpenClaim claim = openClaim();
+        // being paid: 12,000 waits for approval (above the adjuster's limit), so it never issues on its own
+        Long exposureId = createExposure("supervisor1", claim.id(), "15000").exposure().id();
+        assertThat(payOk(claim.adjuster(), exposureId, "12000", "City Motors").status())
+                .isEqualTo(Payment.Status.PENDING_APPROVAL);
+
+        assertThat(error(lowerReserve(claim, exposureId, "10000", currentETag(claim, exposureId)),
+                HttpStatus.UNPROCESSABLE_ENTITY).code()).isEqualTo("RESERVE_BELOW_COMMITTED");
+    }
+
+    @Test
+    void paymentsIssuedInTheBackgroundMakeAnOlderViewOfTheExposureStale() {
+        OpenClaim claim = openClaim();
         Long exposureId = createExposure(claim.adjuster(), claim.id(), "4000").exposure().id();
-        payOk(claim.adjuster(), exposureId, "3000", "City Motors");
+        String seenBeforeIssuing = currentETag(claim, exposureId);
+        PaymentResponse paid = payOk(claim.adjuster(), exposureId, "3000", "City Motors");
+        awaitPayment(claim.id(), paid.id(), Payment.Status.ISSUED);
 
-        ResponseEntity<ApiError> lowered = http.exchange("/api/v1/exposures/" + exposureId + "/reserve", HttpMethod.PUT,
-                new HttpEntity<>(new ReserveRequest(new BigDecimal("2000"), "estimate revised"), ifMatch(claim.adjuster(),
-                        "\"" + exposure(claim.id(), exposureId).version() + "\"")), ApiError.class);
+        // the adjuster decided on numbers that have changed since: refused, not applied (BUG-013)
+        assertThat(lowerReserve(claim, exposureId, "3500", seenBeforeIssuing).getStatusCode())
+                .isEqualTo(HttpStatus.PRECONDITION_FAILED);
+        assertThat(error(lowerReserve(claim, exposureId, "2000", currentETag(claim, exposureId)),
+                HttpStatus.UNPROCESSABLE_ENTITY).code()).isEqualTo("RESERVE_BELOW_COMMITTED");
+    }
 
-        assertThat(error(lowered, HttpStatus.UNPROCESSABLE_ENTITY).code()).isEqualTo("RESERVE_BELOW_COMMITTED");
+    private String currentETag(OpenClaim claim, Long exposureId) {
+        return "\"" + exposure(claim.id(), exposureId).version() + "\"";
+    }
+
+    private ResponseEntity<ApiError> lowerReserve(OpenClaim claim, Long exposureId, String amount, String etag) {
+        return http.exchange("/api/v1/exposures/" + exposureId + "/reserve", HttpMethod.PUT,
+                new HttpEntity<>(new ReserveRequest(new BigDecimal(amount), "estimate revised"),
+                        ifMatch(claim.adjuster(), etag)), ApiError.class);
     }
 
     private HttpHeaders ifMatch(String user, String etag) {

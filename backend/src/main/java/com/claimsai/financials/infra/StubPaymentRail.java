@@ -18,6 +18,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * <ul>
  *   <li>"REFUSE": permanent refusal (account closed)</li>
  *   <li>"FLAKY": unavailable on the first attempt, fine afterwards</li>
+ *   <li>"DOWN": unavailable on every attempt (the payment ends up stuck, for a person to resolve)</li>
  *   <li>"LOST-RESPONSE": the money moves, but the answer is lost; the retry must NOT pay again</li>
  * </ul>
  */
@@ -38,6 +39,9 @@ public class StubPaymentRail implements PaymentRail {
         String payee = instruction.payeeName().toUpperCase(Locale.ROOT);
         if (payee.contains("REFUSE")) {
             throw new PaymentRefusedException("payee account closed");
+        }
+        if (payee.contains("DOWN")) {
+            throw new RailUnavailableException("payment platform unreachable");
         }
         if (payee.contains("FLAKY") && failedOnce.add(instruction.idempotencyKey())) {
             throw new RailUnavailableException("payment platform timeout");

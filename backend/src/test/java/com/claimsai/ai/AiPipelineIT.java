@@ -2,6 +2,9 @@ package com.claimsai.ai;
 
 import com.claimsai.ai.api.AiAssessmentController.AiAssessmentView;
 import com.claimsai.ai.api.AiAssessmentController.OverrideRequest;
+import com.claimsai.activity.api.ActivityDtos.ActivityResponse;
+import com.claimsai.activity.domain.Activity;
+import com.claimsai.activity.domain.ActivityType;
 import com.claimsai.ai.domain.AiAssessment;
 import com.claimsai.claim.api.ClaimDtos.FnolRequest;
 import com.claimsai.claim.api.ClaimDtos.PortalClaimResponse;
@@ -15,6 +18,8 @@ import com.claimsai.claim.domain.LossType;
 import com.claimsai.common.error.ApiError;
 import com.claimsai.document.api.DocumentDtos.StaffDocumentView;
 import com.claimsai.document.domain.Document;
+import com.claimsai.siu.api.SiuDtos.SiuCaseResponse;
+import com.claimsai.siu.domain.SiuCase;
 import com.claimsai.support.IntegrationTest;
 import com.claimsai.support.TestFiles;
 import org.junit.jupiter.api.Test;
@@ -131,6 +136,16 @@ class AiPipelineIT extends IntegrationTest {
                         .contains("DUPLICATE_DOCUMENT_ON_OTHER_CLAIM", "DOCUMENT_DATED_BEFORE_LOSS"));
         assertThat(get("claimant2", "/api/v1/portal/claims/" + claimId, PortalClaimResponse.class).getBody().status())
                 .isEqualTo(ClaimantStatus.IN_REVIEW);
+
+        // the rule opened an SIU case; now (and only now) the SIU investigators can see the claim
+        assertThat(get("siu1", "/api/v1/claims/" + claimId + "/siu-cases", SiuCaseResponse[].class).getBody())
+                .singleElement().satisfies(c -> {
+                    assertThat(c.source()).isEqualTo(SiuCase.Source.RULE);
+                    assertThat(c.referredBy()).isNull();
+                    assertThat(c.fraudScoreAtReferral()).isEqualTo(80);
+                    assertThat(c.status()).isEqualTo(SiuCase.Status.OPEN);
+                });
+        assertThat(get("siu1", "/api/v1/claims/" + earlier, String.class).getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
     }
 
     @Test
@@ -232,6 +247,10 @@ class AiPipelineIT extends IntegrationTest {
         StaffClaimResponse claim = asSupervisor(claimId);
         assertThat(claim.flags()).contains(ClaimFlag.HIGH_FRAUD_SCORE);
         assertThat(claim.status()).as("no automatic referral from OPEN: SIU is a person's call").isEqualTo(ClaimStatus.OPEN);
+        // ... but the adjuster gets a task to make that call
+        eventually().until(() -> Arrays.stream(get("supervisor1", "/api/v1/claims/" + claimId + "/activities",
+                ActivityResponse[].class).getBody()).anyMatch(a -> a.type() == ActivityType.CONSIDER_SIU_REFERRAL
+                && a.status() == Activity.Status.OPEN && a.assignee().equals(claim.assignedAdjuster().username())));
         assertThat(Arrays.stream(get("supervisor1", "/api/v1/claims/" + claimId + "/ai-assessments",
                 AiAssessmentView[].class).getBody()).filter(a -> a.kind() == AiAssessment.Kind.DOCUMENT_EXTRACTION))
                 .singleElement().satisfies(a -> assertThat(a.output().get("riskSignals").toString())

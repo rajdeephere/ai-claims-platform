@@ -37,7 +37,8 @@ flowchart TB
 | `document` | storage port (S3 adapter), presigned upload/download, verification (type, size, hash), document lifecycle | phase 4 |
 | `ai` | LLM port (Groq, stub), document preparation, extraction + validation, fraud score (implements the claim module's `RiskAssessmentPort`), human review | phase 5 |
 | `financials` | exposures, reserves, payments, recoveries, authority limits, maker-checker approvals, payment rail port (implements the claim module's `ClaimFinancialsPort`) | phase 6 |
-| `siu`, `activity` | fraud investigations, tasks, SLA escalation | phase 7 |
+| `siu` | SIU cases: referral (rule, manual), case-based visibility, outcome (implements the claim module's `SiuReferralPort`) | phase 7 |
+| `activity` | tasks created from outbox events, SLA timers and escalation, supervisor dashboard | phase 7 |
 
 Layers inside every module: `api` → `app` → `domain`, with `infra` for adapters and `config` for wiring.
 Rules enforced by `ArchitectureTest` ([ADR-0002](adr/0002-modular-monolith-with-enforced-boundaries.md)).
@@ -158,6 +159,30 @@ The claim module asks `ClaimFinancialsPort` whether it may close or be withdrawn
 implements it. A denial is proposed by the adjuster and applied by the approving supervisor
 ([ADR-0024](adr/0024-financials-exposures-reserves-payments-and-maker-checker.md)). Concurrent payments
 on one exposure are serialised by a row lock ([ADR-0025](adr/0025-pessimistic-lock-on-the-exposure-for-payments.md)).
+
+## SIU and activities (phase 7)
+
+```mermaid
+flowchart LR
+  subgraph Producers["modules publish what they did (outbox)"]
+    C["claim: CLAIM_ASSIGNED, HIGH_FRAUD_SCORE,<br/>INFO_REQUEST_OVERDUE / EXPIRED, status changes"]
+    S["siu: SIU_CASE_OPENED / DECIDED"]
+    F["financials: PAYMENT_STUCK / ISSUED / FAILED"]
+  end
+  C & S & F --> P["ActivityPlanner<br/>(outbox listener)"]
+  P --> A[("activity<br/>person or role queue, due time")]
+  A --> D["ACTIVITY_DUE job<br/>at the due time"]
+  D -- "still open" --> E["escalate once: URGENT,<br/>SLA_BREACHED, supervisor dashboard"]
+  R["refer-siu / triage rule"] --> SC["siu_case OPEN<br/>claim SIU_REVIEW, payments held"]
+  SC --> O{"SIU outcome"}
+  O -- CLEARED --> OPEN["claim OPEN"]
+  O -- CONFIRMED --> DEN["claim OPEN + denial<br/>proposed; supervisor decides"]
+```
+
+No module calls the activity module: tasks follow from events
+([ADR-0027](adr/0027-activities-from-events-with-sla-timers.md)). The claim module defines
+`SiuReferralPort` and SIU implements it; investigators see only claims with a case
+([ADR-0026](adr/0026-siu-cases-behind-a-port-with-case-based-visibility.md)).
 
 ## Key decisions
 

@@ -231,8 +231,21 @@ public class Claim {
         return moveTo(ClaimStatus.OPEN, "receive information on", now);
     }
 
+    /** The adjuster cancels their own request (e.g. the answer came by phone). */
+    public ClaimTransition informationRequestCancelled(Instant now) {
+        return moveTo(ClaimStatus.OPEN, "cancel the information request on", now);
+    }
+
+    /** Nobody answered in time: the claim comes back to the adjuster, who decides what to do. */
+    public ClaimTransition informationRequestExpired(Instant now) {
+        return moveTo(ClaimStatus.OPEN, "expire the information request on", now);
+    }
+
+    /** OPEN -> SIU_REVIEW. A pending "high fraud score" flag has now been acted on. */
     public ClaimTransition referToSiu(Instant now) {
-        return moveTo(ClaimStatus.SIU_REVIEW, "refer to SIU", now);
+        ClaimTransition transition = moveTo(ClaimStatus.SIU_REVIEW, "refer to SIU", now);
+        removeFlag(ClaimFlag.HIGH_FRAUD_SCORE);
+        return transition;
     }
 
     public ClaimTransition siuReviewCompleted(Instant now) {

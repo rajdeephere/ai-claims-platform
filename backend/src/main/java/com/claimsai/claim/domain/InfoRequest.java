@@ -16,7 +16,7 @@ import java.time.Instant;
 @Table(name = "info_request")
 public class InfoRequest {
 
-    public enum Status { OPEN, ANSWERED, CANCELLED }
+    public enum Status { OPEN, ANSWERED, CANCELLED, EXPIRED }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -71,6 +71,17 @@ public class InfoRequest {
         requireOpen();
         this.respondedAt = now;
         this.status = Status.CANCELLED;
+    }
+
+    /** Nobody answered before the deadline. */
+    public void expire(Instant now) {
+        requireOpen();
+        this.respondedAt = now;
+        this.status = Status.EXPIRED;
+    }
+
+    public boolean isOpen() {
+        return status == Status.OPEN;
     }
 
     private void requireOpen() {

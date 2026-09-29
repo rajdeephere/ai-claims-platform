@@ -25,6 +25,18 @@ public interface ClaimRepository extends JpaRepository<Claim, Long>, JpaSpecific
     long countByPolicyNumberAndIdNotAndLossDateBetween(String policyNumber, Long excludedClaimId, LocalDate from,
                                                        LocalDate to);
 
+    List<Claim> findByPolicyNumberAndIdNotOrderByLossDateDesc(String policyNumber, Long excludedClaimId);
+
+    /** Claims per status for the supervisor dashboard: [status, count]. */
+    @Query("select c.status, count(c) from Claim c group by c.status")
+    List<Object[]> countByStatus();
+
+    /** Handled claims (past intake, not closed) that nobody is assigned to. */
+    @Query("""
+            select count(c) from Claim c
+            where c.assignedAdjusterId is null and c.status in :statuses""")
+    long countUnassigned(@Param("statuses") Collection<ClaimStatus> statuses);
+
     /** Open workload per adjuster in one query: [adjusterId, count]. */
     @Query("""
             select c.assignedAdjusterId, count(c) from Claim c

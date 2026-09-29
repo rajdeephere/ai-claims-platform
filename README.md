@@ -70,6 +70,12 @@ the model (no key needed). For real extraction, get a free key at console.groq.c
 limit (adjusters 5,000, supervisors 50,000) waits in the supervisor queue at `/api/v1/approvals`, and
 nobody approves their own request. See [phase 6](docs/phases/phase-06-financials.md).
 
+**SIU and tasks:** an adjuster refers a suspicious claim with `POST /api/v1/claims/{id}/refer-siu`.
+`siu1` then sees it in `/api/v1/siu/cases` and records the outcome. Follow-up work (first contact,
+unanswered questions, investigations, payments the bank never confirmed) appears as activities at
+`/api/v1/activities`. Breached SLAs show on `/api/v1/dashboard/supervisor`. See
+[phase 7](docs/phases/phase-07-siu-activities-sla.md).
+
 Demo policies are listed in [phase 2](docs/phases/phase-02-claim-core.md#demo-policies).
 
 ## Tests
