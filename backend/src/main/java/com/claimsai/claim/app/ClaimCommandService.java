@@ -3,6 +3,7 @@ package com.claimsai.claim.app;
 import com.claimsai.audit.app.AuditActor;
 import com.claimsai.claim.domain.Claim;
 import com.claimsai.claim.domain.ClaimAction;
+import com.claimsai.claim.domain.ClaimFinancialsPort;
 import com.claimsai.claim.domain.ClaimNote;
 import com.claimsai.claim.domain.ClaimTransition;
 import com.claimsai.claim.domain.InfoRequest;
@@ -16,6 +17,7 @@ import com.claimsai.identity.app.UserRef;
 import com.claimsai.identity.app.UserService;
 import com.claimsai.identity.domain.Role;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
@@ -38,16 +40,19 @@ public class ClaimCommandService {
     private final ClaimAccess access;
     private final ClaimAuditTrail auditTrail;
     private final UserService users;
+    private final ClaimFinancialsPort financials;
     private final Clock clock;
 
     public ClaimCommandService(ClaimRepository claims, InfoRequestRepository infoRequests, ClaimNoteRepository notes,
-                               ClaimAccess access, ClaimAuditTrail auditTrail, UserService users, Clock clock) {
+                               ClaimAccess access, ClaimAuditTrail auditTrail, UserService users,
+                               ClaimFinancialsPort financials, Clock clock) {
         this.claims = claims;
         this.infoRequests = infoRequests;
         this.notes = notes;
         this.access = access;
         this.auditTrail = auditTrail;
         this.users = users;
+        this.financials = financials;
         this.clock = clock;
     }
 
@@ -79,16 +84,44 @@ public class ClaimCommandService {
     public Claim withdraw(Long claimId, String ifMatch, String reason, CurrentUser user) {
         Claim claim = load(claimId, ifMatch, ClaimAction.WITHDRAW, user);
         Instant now = clock.instant();
-        ClaimTransition transition = claim.withdraw(false, now);   // phase 6: real "any payment issued?"
+        ClaimFinancialsPort.Position money = financials.position(claim.getId());
+        if (money.pendingItems() > 0) {
+            throw new BusinessRuleException("PENDING_FINANCIALS",
+                    "A payment or approval is in progress; the adjuster must resolve it first");
+        }
+        ClaimTransition transition = claim.withdraw(money.anyPaymentIssued(), now);
+        financials.releaseOpenExposures(claim.getId(), user.id(), user.username(), "claim withdrawn");
         infoRequests.findByClaimIdAndStatus(claim.getId(), InfoRequest.Status.OPEN).ifPresent(r -> r.cancel(now));
         auditTrail.transition(claim, transition, actor(user), reason);
         return flushed(claim);
     }
 
+    /** Closing needs every exposure closed and nothing in progress; PAID if any money went out. */
     public Claim close(Long claimId, String ifMatch, String reason, CurrentUser user) {
         Claim claim = load(claimId, ifMatch, ClaimAction.CLOSE, user);
-        ClaimTransition transition = claim.close(false, clock.instant());   // phase 6: exposures and payments
+        ClaimFinancialsPort.Position money = financials.position(claim.getId());
+        if (money.openExposures() > 0) {
+            throw new BusinessRuleException("OPEN_EXPOSURES", "Close the claim's " + money.openExposures()
+                    + " open exposure(s) first");
+        }
+        if (money.pendingItems() > 0) {
+            throw new BusinessRuleException("PENDING_FINANCIALS",
+                    "Payments or approvals are still in progress on this claim");
+        }
+        ClaimTransition transition = claim.close(money.anyPaymentIssued(), clock.instant());
         auditTrail.transition(claim, transition, actor(user), reason);
+        return flushed(claim);
+    }
+
+    /**
+     * A supervisor approved a denial (maker-checker, in the financials module). Called inside that
+     * approval's transaction; the approver is the actor of record.
+     */
+    @Transactional(propagation = Propagation.MANDATORY)
+    public Claim applyApprovedDenial(Long claimId, Long approverId, String approverName, String reason) {
+        Claim claim = claims.findById(claimId).orElseThrow();
+        ClaimTransition transition = claim.deny(clock.instant());
+        auditTrail.transition(claim, transition, new AuditActor(approverId, approverName), reason);
         return flushed(claim);
     }
 

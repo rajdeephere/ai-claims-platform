@@ -6,6 +6,10 @@ import org.junit.jupiter.api.Test;
 import java.util.EnumSet;
 
 import static com.claimsai.claim.domain.ClaimAction.ADD_NOTE;
+import static com.claimsai.claim.domain.ClaimAction.MANAGE_EXPOSURES;
+import static com.claimsai.claim.domain.ClaimAction.RECORD_RECOVERY;
+import static com.claimsai.claim.domain.ClaimAction.REQUEST_DENIAL;
+import static com.claimsai.claim.domain.ClaimAction.REQUEST_PAYMENT;
 import static com.claimsai.claim.domain.ClaimAction.CLOSE;
 import static com.claimsai.claim.domain.ClaimAction.REASSIGN;
 import static com.claimsai.claim.domain.ClaimAction.REOPEN;
@@ -28,7 +32,7 @@ class ClaimActionTest {
         Claim claim = ClaimTest.open();   // filed by user 1, assigned to user 3
 
         assertThat(ClaimAction.allowed(claim, ADJUSTER, Role.ADJUSTER)).containsExactlyInAnyOrder(REQUEST_INFO, CLOSE, ADD_NOTE,
-                UPLOAD_DOCUMENT, REVIEW_AI);
+                UPLOAD_DOCUMENT, REVIEW_AI, MANAGE_EXPOSURES, REQUEST_PAYMENT, REQUEST_DENIAL, RECORD_RECOVERY);
     }
 
     @Test
@@ -39,7 +43,8 @@ class ClaimActionTest {
     @Test
     void supervisorReassignsButNeverClosesForTheAdjuster() {
         assertThat(ClaimAction.allowed(ClaimTest.open(), SUPERVISOR, Role.SUPERVISOR))
-                .containsExactlyInAnyOrder(REASSIGN, ADD_NOTE, UPLOAD_DOCUMENT, REVIEW_AI);
+                .containsExactlyInAnyOrder(REASSIGN, ADD_NOTE, UPLOAD_DOCUMENT, REVIEW_AI, MANAGE_EXPOSURES,
+                        REQUEST_PAYMENT, RECORD_RECOVERY);   // denials: proposed by the adjuster, decided by her
     }
 
     @Test
@@ -68,6 +73,15 @@ class ClaimActionTest {
 
         assertThat(ClaimAction.allowed(claim, SUPERVISOR, Role.SUPERVISOR)).containsExactlyInAnyOrder(REOPEN, ADD_NOTE);
         assertThat(ClaimAction.allowed(claim, ADJUSTER, Role.ADJUSTER)).containsExactly(ADD_NOTE);
+    }
+
+    @Test
+    void underSiuReviewReservesCanChangeButNoMoneyGoesOut() {
+        Claim claim = ClaimTest.open();
+        claim.referToSiu(ClaimTest.NOW);
+
+        assertThat(ClaimAction.allowed(claim, ADJUSTER, Role.ADJUSTER))
+                .contains(MANAGE_EXPOSURES).doesNotContain(REQUEST_PAYMENT, REQUEST_DENIAL, CLOSE);
     }
 
     @Test

@@ -118,6 +118,93 @@
           }
         }
       },
+      "ApprovalResponse" : {
+        "properties" : {
+          "amount" : {
+            "type" : "number"
+          },
+          "claimId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "decidedAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "decidedBy" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "decisionReason" : {
+            "type" : "string"
+          },
+          "id" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "kind" : {
+            "enum" : [ "PAYMENT", "RESERVE_CHANGE", "DENIAL" ],
+            "type" : "string"
+          },
+          "reason" : {
+            "type" : "string"
+          },
+          "requestedAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "requestedBy" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "status" : {
+            "enum" : [ "PENDING", "APPROVED", "REJECTED", "CANCELLED" ],
+            "type" : "string"
+          },
+          "targetId" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        },
+        "type" : "object"
+      },
+      "CreateExposureRequest" : {
+        "properties" : {
+          "claimantName" : {
+            "example" : "Asha Verma (insured)",
+            "maxLength" : 100,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "reason" : {
+            "maxLength" : 2000,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "reserve" : {
+            "description" : "Initial reserve; above your authority limit it waits for approval",
+            "example" : 4000.0,
+            "minimum" : 0.0,
+            "type" : "number"
+          },
+          "type" : {
+            "enum" : [ "VEHICLE_DAMAGE", "PROPERTY_DAMAGE", "BODILY_INJURY" ],
+            "type" : "string"
+          }
+        },
+        "required" : [ "claimantName", "type" ],
+        "type" : "object"
+      },
+      "DecisionRequest" : {
+        "properties" : {
+          "comment" : {
+            "maxLength" : 2000,
+            "minLength" : 0,
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
       "DownloadLinkResponse" : {
         "properties" : {
           "expiresAt" : {
@@ -126,6 +213,59 @@
           },
           "url" : {
             "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "ExposureResponse" : {
+        "properties" : {
+          "available" : {
+            "description" : "What can still be paid",
+            "type" : "number"
+          },
+          "claimId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "claimantName" : {
+            "type" : "string"
+          },
+          "closedAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "committed" : {
+            "description" : "Committed to payments awaiting approval or issuing",
+            "type" : "number"
+          },
+          "coverageType" : {
+            "type" : "string"
+          },
+          "createdAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "id" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "paid" : {
+            "type" : "number"
+          },
+          "reserve" : {
+            "type" : "number"
+          },
+          "status" : {
+            "enum" : [ "OPEN", "CLOSED" ],
+            "type" : "string"
+          },
+          "type" : {
+            "enum" : [ "VEHICLE_DAMAGE", "PROPERTY_DAMAGE", "BODILY_INJURY" ],
+            "type" : "string"
+          },
+          "version" : {
+            "format" : "int64",
+            "type" : "integer"
           }
         },
         "type" : "object"
@@ -388,6 +528,33 @@
         "required" : [ "fields", "reason" ],
         "type" : "object"
       },
+      "PageResponseApprovalResponse" : {
+        "properties" : {
+          "content" : {
+            "items" : {
+              "$ref" : "#/components/schemas/ApprovalResponse"
+            },
+            "type" : "array"
+          },
+          "page" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "size" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "totalElements" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "totalPages" : {
+            "format" : "int32",
+            "type" : "integer"
+          }
+        },
+        "type" : "object"
+      },
       "PageResponseJobView" : {
         "properties" : {
           "content" : {
@@ -496,16 +663,95 @@
         },
         "type" : "object"
       },
+      "PaymentRequest" : {
+        "properties" : {
+          "amount" : {
+            "example" : 3800.0,
+            "minimum" : 0.01,
+            "type" : "number"
+          },
+          "payeeName" : {
+            "example" : "City Motors Pvt Ltd",
+            "maxLength" : 100,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "reason" : {
+            "maxLength" : 2000,
+            "minLength" : 0,
+            "type" : "string"
+          }
+        },
+        "required" : [ "amount", "payeeName" ],
+        "type" : "object"
+      },
+      "PaymentResponse" : {
+        "properties" : {
+          "amount" : {
+            "type" : "number"
+          },
+          "approvalRequestId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "approvedBy" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "claimId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "createdAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "exposureId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "externalReference" : {
+            "type" : "string"
+          },
+          "failureReason" : {
+            "type" : "string"
+          },
+          "id" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "issuedAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "payeeName" : {
+            "type" : "string"
+          },
+          "requestedBy" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "status" : {
+            "enum" : [ "PENDING_APPROVAL", "APPROVED", "ISSUED", "FAILED", "REJECTED" ],
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
       "PortalClaimResponse" : {
         "description" : "A claim as its claimant sees it: no fraud score, segment, flags or internal notes",
         "properties" : {
           "allowedActions" : {
             "items" : {
-              "enum" : [ "REQUEST_INFO", "CLOSE", "ADD_NOTE", "REASSIGN", "REOPEN", "RESPOND", "WITHDRAW", "UPLOAD_DOCUMENT", "REVIEW_AI" ],
+              "enum" : [ "REQUEST_INFO", "CLOSE", "ADD_NOTE", "REASSIGN", "REOPEN", "RESPOND", "WITHDRAW", "UPLOAD_DOCUMENT", "REVIEW_AI", "MANAGE_EXPOSURES", "REQUEST_PAYMENT", "REQUEST_DENIAL", "RECORD_RECOVERY" ],
               "type" : "string"
             },
             "type" : "array",
             "uniqueItems" : true
+          },
+          "amountPaid" : {
+            "description" : "Total paid out so far",
+            "type" : "number"
           },
           "claimNumber" : {
             "type" : "string"
@@ -667,6 +913,64 @@
         "required" : [ "adjusterId" ],
         "type" : "object"
       },
+      "RecoveryRequest" : {
+        "properties" : {
+          "amount" : {
+            "minimum" : 0.01,
+            "type" : "number"
+          },
+          "receivedOn" : {
+            "format" : "date",
+            "type" : "string"
+          },
+          "reference" : {
+            "maxLength" : 100,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "source" : {
+            "enum" : [ "THIRD_PARTY_INSURER", "THIRD_PARTY", "SALVAGE", "OTHER" ],
+            "type" : "string"
+          }
+        },
+        "required" : [ "amount", "receivedOn", "source" ],
+        "type" : "object"
+      },
+      "RecoveryResponse" : {
+        "properties" : {
+          "amount" : {
+            "type" : "number"
+          },
+          "claimId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "createdAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "id" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "receivedOn" : {
+            "format" : "date",
+            "type" : "string"
+          },
+          "recordedBy" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "reference" : {
+            "type" : "string"
+          },
+          "source" : {
+            "enum" : [ "THIRD_PARTY_INSURER", "THIRD_PARTY", "SALVAGE", "OTHER" ],
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
       "RefreshRequest" : {
         "properties" : {
           "refreshToken" : {
@@ -678,15 +982,45 @@
         "required" : [ "refreshToken" ],
         "type" : "object"
       },
+      "ReserveRequest" : {
+        "properties" : {
+          "amount" : {
+            "minimum" : 0.0,
+            "type" : "number"
+          },
+          "reason" : {
+            "maxLength" : 2000,
+            "minLength" : 0,
+            "type" : "string"
+          }
+        },
+        "required" : [ "amount", "reason" ],
+        "type" : "object"
+      },
+      "ReserveResponse" : {
+        "description" : "pendingApproval is set when the change is above your authority and waits for a supervisor",
+        "properties" : {
+          "exposure" : {
+            "$ref" : "#/components/schemas/ExposureResponse"
+          },
+          "pendingApproval" : {
+            "$ref" : "#/components/schemas/ApprovalResponse"
+          }
+        },
+        "type" : "object"
+      },
       "StaffClaimResponse" : {
         "properties" : {
           "allowedActions" : {
             "items" : {
-              "enum" : [ "REQUEST_INFO", "CLOSE", "ADD_NOTE", "REASSIGN", "REOPEN", "RESPOND", "WITHDRAW", "UPLOAD_DOCUMENT", "REVIEW_AI" ],
+              "enum" : [ "REQUEST_INFO", "CLOSE", "ADD_NOTE", "REASSIGN", "REOPEN", "RESPOND", "WITHDRAW", "UPLOAD_DOCUMENT", "REVIEW_AI", "MANAGE_EXPOSURES", "REQUEST_PAYMENT", "REQUEST_DENIAL", "RECORD_RECOVERY" ],
               "type" : "string"
             },
             "type" : "array",
             "uniqueItems" : true
+          },
+          "amountPaid" : {
+            "type" : "number"
           },
           "assignedAdjuster" : {
             "$ref" : "#/components/schemas/UserView"
@@ -1096,9 +1430,9 @@
     }
   },
   "info" : {
-    "description" : "Guidewire-style claims handling: FNOL, exposures, reserves, payments, approvals, SIU and AI document assessment.\n\nAPI version **v1** (contract 1.4.0). Breaking changes get `/api/v2`; additions bump the minor version.",
+    "description" : "Guidewire-style claims handling: FNOL, exposures, reserves, payments, approvals, SIU and AI document assessment.\n\nAPI version **v1** (contract 1.5.0). Breaking changes get `/api/v2`; additions bump the minor version.",
     "title" : "AI Claims Platform API",
-    "version" : "1.4.0"
+    "version" : "1.5.0"
   },
   "openapi" : "3.1.0",
   "paths" : {
@@ -1301,6 +1635,317 @@
         },
         "summary" : "Correct the AI's reading, with a reason",
         "tags" : [ "AI assessments" ]
+      }
+    },
+    "/api/v1/approvals" : {
+      "get" : {
+        "operationId" : "listApprovals",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "status",
+          "required" : false,
+          "schema" : {
+            "default" : "PENDING",
+            "enum" : [ "PENDING", "APPROVED", "REJECTED", "CANCELLED" ],
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "page",
+          "required" : false,
+          "schema" : {
+            "default" : 0,
+            "format" : "int32",
+            "minimum" : 0,
+            "type" : "integer"
+          }
+        }, {
+          "in" : "query",
+          "name" : "size",
+          "required" : false,
+          "schema" : {
+            "default" : 20,
+            "format" : "int32",
+            "maximum" : 100,
+            "minimum" : 1,
+            "type" : "integer"
+          }
+        }, {
+          "$ref" : "#/components/parameters/CorrelationId"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PageResponseApprovalResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "400" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Invalid request: malformed body, bad parameter or failed validation (see `violations`)"
+          },
+          "401" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Missing, invalid or expired access token"
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "The user's role does not allow this action"
+          },
+          "500" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Unexpected error (details are logged with the correlation ID, never returned)"
+          }
+        },
+        "summary" : "Approval requests by status, oldest first (default PENDING)",
+        "tags" : [ "Approvals" ]
+      }
+    },
+    "/api/v1/approvals/{id}/approve" : {
+      "post" : {
+        "operationId" : "approveRequest",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        }, {
+          "$ref" : "#/components/parameters/CorrelationId"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/DecisionRequest"
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApprovalResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "400" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Invalid request: malformed body, bad parameter or failed validation (see `violations`)"
+          },
+          "401" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Missing, invalid or expired access token"
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "The user's role does not allow this action"
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Not found, or not visible to this user"
+          },
+          "409" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Conflicts with the current state: invalid transition, duplicate or concurrent update"
+          },
+          "422" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Well-formed, but breaks a business rule"
+          },
+          "500" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Unexpected error (details are logged with the correlation ID, never returned)"
+          }
+        },
+        "summary" : "Approve (never your own request; needs enough authority)",
+        "tags" : [ "Approvals" ]
+      }
+    },
+    "/api/v1/approvals/{id}/reject" : {
+      "post" : {
+        "operationId" : "rejectRequest",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        }, {
+          "$ref" : "#/components/parameters/CorrelationId"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ReasonRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApprovalResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "400" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Invalid request: malformed body, bad parameter or failed validation (see `violations`)"
+          },
+          "401" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Missing, invalid or expired access token"
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "The user's role does not allow this action"
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Not found, or not visible to this user"
+          },
+          "409" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Conflicts with the current state: invalid transition, duplicate or concurrent update"
+          },
+          "422" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Well-formed, but breaks a business rule"
+          },
+          "500" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Unexpected error (details are logged with the correlation ID, never returned)"
+          }
+        },
+        "summary" : "Reject, with a reason",
+        "tags" : [ "Approvals" ]
       }
     },
     "/api/v1/auth/login" : {
@@ -1767,6 +2412,106 @@
         "tags" : [ "AI assessments" ]
       }
     },
+    "/api/v1/claims/{claimId}/denial-requests" : {
+      "post" : {
+        "operationId" : "requestDenial",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "claimId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        }, {
+          "$ref" : "#/components/parameters/CorrelationId"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ReasonRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApprovalResponse"
+                }
+              }
+            },
+            "description" : "Denial request created"
+          },
+          "400" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Invalid request: malformed body, bad parameter or failed validation (see `violations`)"
+          },
+          "401" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Missing, invalid or expired access token"
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "The user's role does not allow this action"
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Not found, or not visible to this user"
+          },
+          "409" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Conflicts with the current state: invalid transition, duplicate or concurrent update"
+          },
+          "500" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Unexpected error (details are logged with the correlation ID, never returned)"
+          }
+        },
+        "summary" : "Propose denying the claim; a supervisor decides",
+        "tags" : [ "Financials" ]
+      }
+    },
     "/api/v1/claims/{claimId}/documents" : {
       "get" : {
         "operationId" : "listClaimDocuments",
@@ -1956,6 +2701,471 @@
         },
         "summary" : "Start an upload (staff documents are not shown to the claimant)",
         "tags" : [ "Documents" ]
+      }
+    },
+    "/api/v1/claims/{claimId}/exposures" : {
+      "get" : {
+        "operationId" : "listExposures",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "claimId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        }, {
+          "$ref" : "#/components/parameters/CorrelationId"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/ExposureResponse"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "400" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Invalid request: malformed body, bad parameter or failed validation (see `violations`)"
+          },
+          "401" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Missing, invalid or expired access token"
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "The user's role does not allow this action"
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Not found, or not visible to this user"
+          },
+          "500" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Unexpected error (details are logged with the correlation ID, never returned)"
+          }
+        },
+        "summary" : "Exposures with reserve, paid, committed and available amounts",
+        "tags" : [ "Financials" ]
+      },
+      "post" : {
+        "operationId" : "createExposure",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "claimId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        }, {
+          "$ref" : "#/components/parameters/CorrelationId"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreateExposureRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ReserveResponse"
+                }
+              }
+            },
+            "description" : "Created; pendingApproval set if the reserve is above your authority"
+          },
+          "400" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Invalid request: malformed body, bad parameter or failed validation (see `violations`)"
+          },
+          "401" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Missing, invalid or expired access token"
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "The user's role does not allow this action"
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Not found, or not visible to this user"
+          },
+          "409" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Conflicts with the current state: invalid transition, duplicate or concurrent update"
+          },
+          "422" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Well-formed, but breaks a business rule"
+          },
+          "500" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Unexpected error (details are logged with the correlation ID, never returned)"
+          }
+        },
+        "summary" : "Create an exposure, with an optional initial reserve",
+        "tags" : [ "Financials" ]
+      }
+    },
+    "/api/v1/claims/{claimId}/payments" : {
+      "get" : {
+        "operationId" : "listPayments",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "claimId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        }, {
+          "$ref" : "#/components/parameters/CorrelationId"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/PaymentResponse"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "400" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Invalid request: malformed body, bad parameter or failed validation (see `violations`)"
+          },
+          "401" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Missing, invalid or expired access token"
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "The user's role does not allow this action"
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Not found, or not visible to this user"
+          },
+          "500" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Unexpected error (details are logged with the correlation ID, never returned)"
+          }
+        },
+        "summary" : "Payments on the claim",
+        "tags" : [ "Financials" ]
+      }
+    },
+    "/api/v1/claims/{claimId}/recoveries" : {
+      "get" : {
+        "operationId" : "listRecoveries",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "claimId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        }, {
+          "$ref" : "#/components/parameters/CorrelationId"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/RecoveryResponse"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "400" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Invalid request: malformed body, bad parameter or failed validation (see `violations`)"
+          },
+          "401" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Missing, invalid or expired access token"
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "The user's role does not allow this action"
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Not found, or not visible to this user"
+          },
+          "500" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Unexpected error (details are logged with the correlation ID, never returned)"
+          }
+        },
+        "summary" : "Recoveries on the claim",
+        "tags" : [ "Financials" ]
+      },
+      "post" : {
+        "operationId" : "recordRecovery",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "claimId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        }, {
+          "$ref" : "#/components/parameters/CorrelationId"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/RecoveryRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/RecoveryResponse"
+                }
+              }
+            },
+            "description" : "Recovery recorded"
+          },
+          "400" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Invalid request: malformed body, bad parameter or failed validation (see `violations`)"
+          },
+          "401" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Missing, invalid or expired access token"
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "The user's role does not allow this action"
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Not found, or not visible to this user"
+          },
+          "409" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Conflicts with the current state: invalid transition, duplicate or concurrent update"
+          },
+          "422" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Well-formed, but breaks a business rule"
+          },
+          "500" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Unexpected error (details are logged with the correlation ID, never returned)"
+          }
+        },
+        "summary" : "Record money recovered (subrogation, salvage)",
+        "tags" : [ "Financials" ]
       }
     },
     "/api/v1/claims/{id}" : {
@@ -2921,6 +4131,399 @@
         },
         "summary" : "A download link valid for 5 minutes",
         "tags" : [ "Documents" ]
+      }
+    },
+    "/api/v1/exposures/{id}/close" : {
+      "post" : {
+        "operationId" : "closeExposure",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        }, {
+          "in" : "header",
+          "name" : "If-Match",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "$ref" : "#/components/parameters/CorrelationId"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ReasonRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ExposureResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "400" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Invalid request: malformed body, bad parameter or failed validation (see `violations`)"
+          },
+          "401" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Missing, invalid or expired access token"
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "The user's role does not allow this action"
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Not found, or not visible to this user"
+          },
+          "409" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Conflicts with the current state: invalid transition, duplicate or concurrent update"
+          },
+          "412" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "`If-Match` does not match the current version: reload and retry"
+          },
+          "422" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Well-formed, but breaks a business rule"
+          },
+          "428" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "`If-Match` is required on this request: send the ETag from your last GET"
+          },
+          "500" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Unexpected error (details are logged with the correlation ID, never returned)"
+          }
+        },
+        "summary" : "Close an exposure, releasing its unused reserve",
+        "tags" : [ "Financials" ]
+      }
+    },
+    "/api/v1/exposures/{id}/payments" : {
+      "post" : {
+        "description" : "Within your authority: APPROVED and sent to the payment rail. Above it: PENDING_APPROVAL until a supervisor approves. Never more than the available reserve; never under SIU review.",
+        "operationId" : "requestPayment",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        }, {
+          "in" : "header",
+          "name" : "Idempotency-Key",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "$ref" : "#/components/parameters/CorrelationId"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PaymentRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PaymentResponse"
+                }
+              }
+            },
+            "description" : "Payment created (or replayed)"
+          },
+          "400" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Invalid request: malformed body, bad parameter or failed validation (see `violations`)"
+          },
+          "401" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Missing, invalid or expired access token"
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "The user's role does not allow this action"
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Not found, or not visible to this user"
+          },
+          "409" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Conflicts with the current state: invalid transition, duplicate or concurrent update"
+          },
+          "422" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Well-formed, but breaks a business rule"
+          },
+          "500" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Unexpected error (details are logged with the correlation ID, never returned)"
+          }
+        },
+        "summary" : "Request a payment (Idempotency-Key required)",
+        "tags" : [ "Financials" ]
+      }
+    },
+    "/api/v1/exposures/{id}/reserve" : {
+      "put" : {
+        "description" : "Lowering is applied at once; raising above your authority creates an approval request.",
+        "operationId" : "changeReserve",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        }, {
+          "in" : "header",
+          "name" : "If-Match",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "$ref" : "#/components/parameters/CorrelationId"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ReserveRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ReserveResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "400" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Invalid request: malformed body, bad parameter or failed validation (see `violations`)"
+          },
+          "401" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Missing, invalid or expired access token"
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "The user's role does not allow this action"
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Not found, or not visible to this user"
+          },
+          "409" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Conflicts with the current state: invalid transition, duplicate or concurrent update"
+          },
+          "412" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "`If-Match` does not match the current version: reload and retry"
+          },
+          "422" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Well-formed, but breaks a business rule"
+          },
+          "428" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "`If-Match` is required on this request: send the ETag from your last GET"
+          },
+          "500" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Unexpected error (details are logged with the correlation ID, never returned)"
+          }
+        },
+        "summary" : "Set the reserve (If-Match: the exposure's ETag)",
+        "tags" : [ "Financials" ]
       }
     },
     "/api/v1/me" : {
@@ -4313,11 +5916,17 @@
     "description" : "Claim handling for staff",
     "name" : "Claims"
   }, {
+    "description" : "Maker-checker decisions",
+    "name" : "Approvals"
+  }, {
     "description" : "Upload and download documents for my claims",
     "name" : "Portal: documents"
   }, {
     "description" : "Background jobs",
     "name" : "Operations"
+  }, {
+    "description" : "Exposures, reserves, payments, recoveries",
+    "name" : "Financials"
   }, {
     "description" : "Claimant self-service",
     "name" : "Portal: my claims"

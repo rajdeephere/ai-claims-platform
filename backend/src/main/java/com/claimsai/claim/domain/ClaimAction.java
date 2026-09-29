@@ -25,7 +25,13 @@ public enum ClaimAction {
     /** From the moment of FNOL until the claim is closed. */
     UPLOAD_DOCUMENT(EnumSet.complementOf(EnumSet.of(ClaimStatus.CLOSED))),
     /** Accept or correct what the AI read from a document. */
-    REVIEW_AI(EnumSet.complementOf(EnumSet.of(ClaimStatus.CLOSED)));
+    REVIEW_AI(EnumSet.complementOf(EnumSet.of(ClaimStatus.CLOSED))),
+    /** Create exposures and change reserves (also while waiting for the claimant or under SIU review). */
+    MANAGE_EXPOSURES(Set.of(ClaimStatus.OPEN, ClaimStatus.AWAITING_INFO, ClaimStatus.SIU_REVIEW)),
+    /** Only on an OPEN claim: never while under SIU review (the SIU hold). */
+    REQUEST_PAYMENT(Set.of(ClaimStatus.OPEN)),
+    REQUEST_DENIAL(Set.of(ClaimStatus.OPEN)),
+    RECORD_RECOVERY(Set.of(ClaimStatus.OPEN));
 
     private final Set<ClaimStatus> statuses;
 
@@ -49,7 +55,9 @@ public enum ClaimAction {
             case RESPOND, WITHDRAW -> role == Role.CLAIMANT && owner;
             case UPLOAD_DOCUMENT -> (role == Role.CLAIMANT && owner) || (role == Role.ADJUSTER && assignee)
                     || role == Role.SUPERVISOR;
-            case REVIEW_AI -> (role == Role.ADJUSTER && assignee) || role == Role.SUPERVISOR;
+            case REVIEW_AI, MANAGE_EXPOSURES, REQUEST_PAYMENT, RECORD_RECOVERY ->
+                    (role == Role.ADJUSTER && assignee) || role == Role.SUPERVISOR;
+            case REQUEST_DENIAL -> role == Role.ADJUSTER && assignee;
         };
     }
 

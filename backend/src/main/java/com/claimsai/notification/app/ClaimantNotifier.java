@@ -1,6 +1,7 @@
 package com.claimsai.notification.app;
 
 import com.claimsai.claim.domain.ClaimEvents;
+import com.claimsai.financials.domain.FinancialsEvents;
 import com.claimsai.notification.domain.Notification;
 import com.claimsai.notification.infra.NotificationRepository;
 import com.claimsai.platform.outbox.app.OutboxListener;
@@ -35,7 +36,8 @@ public class ClaimantNotifier implements OutboxListener {
 
     @Override
     public Set<String> eventTypes() {
-        return Set.of(ClaimEvents.CLAIM_SUBMITTED, ClaimEvents.CLAIM_STATUS_CHANGED, ClaimEvents.INFO_REQUESTED);
+        return Set.of(ClaimEvents.CLAIM_SUBMITTED, ClaimEvents.CLAIM_STATUS_CHANGED, ClaimEvents.INFO_REQUESTED,
+                FinancialsEvents.PAYMENT_ISSUED);
     }
 
     @Override
@@ -58,6 +60,9 @@ public class ClaimantNotifier implements OutboxListener {
                     "Thank you. We are checking your policy and will assign a claims adjuster shortly."));
             case ClaimEvents.INFO_REQUESTED -> Optional.of(new Message("Action needed on claim " + number,
                     event.text(ClaimEvents.MESSAGE)));
+            case FinancialsEvents.PAYMENT_ISSUED -> Optional.of(new Message("Payment issued on claim " + number,
+                    "A payment of Rs " + event.text(FinancialsEvents.AMOUNT) + " to " + event.text(FinancialsEvents.PAYEE)
+                            + " has been issued."));
             case ClaimEvents.CLAIM_STATUS_CHANGED -> statusMessage(number, event.text(ClaimEvents.FROM),
                     event.text(ClaimEvents.TO), event.text(ClaimEvents.OUTCOME));
             default -> Optional.empty();

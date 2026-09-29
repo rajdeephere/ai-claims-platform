@@ -30,7 +30,7 @@ final class ClaimApiMapper {
         return new PortalClaimResponse(c.getId(), c.getClaimNumber(), c.getPolicyNumber(),
                 ClaimantStatus.of(c.getStatus(), c.getCloseOutcome()), c.getLossDate(), c.getLossType(),
                 c.getLossLocation(), c.getDescription(), c.getEstimatedLoss(), c.getCreatedAt(), c.getClosedAt(),
-                infoRequest(details.openInfoRequest()), details.allowedActions());
+                infoRequest(details.openInfoRequest()), details.amountPaid(), details.allowedActions());
     }
 
     static PortalClaimSummary toPortalSummary(Claim c) {
@@ -44,8 +44,8 @@ final class ClaimApiMapper {
                 c.getCloseOutcome(), c.getSegment(), c.getPolicyVerification(), c.getFlags(), c.getFraudScore(),
                 c.getClaimantUserId(), c.getContactName(), c.getContactPhone(), c.getLossDate(), c.getLossType(),
                 c.getLossLocation(), c.getDescription(), c.isInjuriesReported(), c.getEstimatedLoss(),
-                user(details.assignedAdjuster()), infoRequest(details.openInfoRequest()), c.getCreatedAt(),
-                c.getUpdatedAt(), c.getClosedAt(), c.getVersion(), details.allowedActions());
+                user(details.assignedAdjuster()), infoRequest(details.openInfoRequest()), details.amountPaid(),
+                c.getCreatedAt(), c.getUpdatedAt(), c.getClosedAt(), c.getVersion(), details.allowedActions());
     }
 
     static StaffClaimSummary toStaffSummary(Claim c, UserRef adjuster) {

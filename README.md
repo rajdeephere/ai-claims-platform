@@ -65,6 +65,11 @@ the model (no key needed). For real extraction, get a free key at console.groq.c
 `AI_PROVIDER=groq GROQ_API_KEY=... mvn spring-boot:run`. Staff see the results at
 `/api/v1/claims/{id}/ai-assessments` and can accept or override them. See [phase 5](docs/phases/phase-05-ai-pipeline.md).
 
+**Money:** staff create exposures with reserves on a claim and request payments against them
+(`/api/v1/claims/{id}/exposures`, `/api/v1/exposures/{id}/payments`). Anything above the user's authority
+limit (adjusters 5,000, supervisors 50,000) waits in the supervisor queue at `/api/v1/approvals`, and
+nobody approves their own request. See [phase 6](docs/phases/phase-06-financials.md).
+
 Demo policies are listed in [phase 2](docs/phases/phase-02-claim-core.md#demo-policies).
 
 ## Tests

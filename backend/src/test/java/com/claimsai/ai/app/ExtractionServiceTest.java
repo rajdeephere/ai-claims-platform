@@ -21,7 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class ExtractionServiceTest {
 
     static final ClaimFacts CLAIM = new ClaimFacts(1L, "CLM-1", "POL-1", LocalDate.of(2026, 9, 26), "VEHICLE_COLLISION",
-            "Rear-ended at a signal", null, ClaimStatus.ASSESSING);
+            "Rear-ended at a signal", null, ClaimStatus.ASSESSING, 1L);
     static final AiProperties PROPS = new AiProperties("fake", "v1", 12000, 1000,
             new AiProperties.Groq(URI.create("http://x"), "k", "t", "v", Duration.ofSeconds(1)));
 

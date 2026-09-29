@@ -75,6 +75,7 @@ public final class ClaimDtos {
                                       LocalDate lossDate, LossType lossType, String lossLocation,
                                       String description, BigDecimal estimatedLoss, Instant submittedAt,
                                       Instant closedAt, InfoRequestView openInfoRequest,
+                                      @Schema(description = "Total paid out so far") BigDecimal amountPaid,
                                       Set<ClaimAction> allowedActions) {
     }
 
@@ -94,8 +95,8 @@ public final class ClaimDtos {
                                      String contactPhone, LocalDate lossDate, LossType lossType,
                                      String lossLocation, String description, boolean injuriesReported,
                                      BigDecimal estimatedLoss, UserView assignedAdjuster,
-                                     InfoRequestView openInfoRequest, Instant createdAt, Instant updatedAt,
-                                     Instant closedAt,
+                                     InfoRequestView openInfoRequest, BigDecimal amountPaid, Instant createdAt,
+                                     Instant updatedAt, Instant closedAt,
                                      @Schema(description = "Also sent as the ETag header; send it back in If-Match")
                                      long version,
                                      Set<ClaimAction> allowedActions) {

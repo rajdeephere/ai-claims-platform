@@ -25,5 +25,7 @@
 | [0021](0021-ai-suggests-people-decide.md) | AI document assessment: the model suggests, validated code and people decide | Accepted | 5 |
 | [0022](0022-explainable-fraud-score-behind-a-port.md) | Explainable fraud score behind a port the claim module owns | Accepted | 5 |
 | [0023](0023-rate-limits-for-login-and-llm-calls.md) | Rate limits for failed logins and outbound LLM calls | Accepted | 5 |
+| [0024](0024-financials-exposures-reserves-payments-and-maker-checker.md) | Financials: exposures, reserves, payments, maker-checker, idempotent payment rail | Accepted | 6 |
+| [0025](0025-pessimistic-lock-on-the-exposure-for-payments.md) | A pessimistic row lock on the exposure for payments | Accepted | 6 |
 
 New ADRs use [template.md](template.md).

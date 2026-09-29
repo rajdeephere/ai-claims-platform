@@ -36,7 +36,7 @@ flowchart TB
 | `notification` | in-app claimant notifications, fed only by claim events | phase 3 |
 | `document` | storage port (S3 adapter), presigned upload/download, verification (type, size, hash), document lifecycle | phase 4 |
 | `ai` | LLM port (Groq, stub), document preparation, extraction + validation, fraud score (implements the claim module's `RiskAssessmentPort`), human review | phase 5 |
-| `exposure`, `payment`, `approval` | reserves, payments, authority limits, maker-checker | phase 6 |
+| `financials` | exposures, reserves, payments, recoveries, authority limits, maker-checker approvals, payment rail port (implements the claim module's `ClaimFinancialsPort`) | phase 6 |
 | `siu`, `activity` | fraud investigations, tasks, SLA escalation | phase 7 |
 
 Layers inside every module: `api` → `app` → `domain`, with `infra` for adapters and `config` for wiring.
@@ -136,6 +136,28 @@ flowchart LR
 The claim module defines `RiskAssessmentPort`; the ai module implements it, so modules stay acyclic
 ([ADR-0022](adr/0022-explainable-fraud-score-behind-a-port.md)). The model never decides
 ([ADR-0021](adr/0021-ai-suggests-people-decide.md)).
+
+## Money and approvals (phase 6)
+
+```mermaid
+flowchart LR
+  REQ["adjuster: request payment<br/>Idempotency-Key"] --> LOCK["lock exposure row<br/>available = reserve − paid − committed"]
+  LOCK -- "over available" --> NO["422 INSUFFICIENT_RESERVE"]
+  LOCK -- "within my limit" --> APP["APPROVED"]
+  LOCK -- "above my limit" --> PEND["PENDING_APPROVAL<br/>+ approval request"]
+  PEND --> SUP{"supervisor: not the requester,<br/>limit covers it, no SIU hold"}
+  SUP -- approve --> APP
+  SUP -- reject --> REJ["REJECTED: reserve freed"]
+  APP --> JOB["ISSUE_PAYMENT job<br/>rail call outside any transaction"]
+  JOB -- refused --> FAILED["FAILED: reserve freed"]
+  JOB -- "timeout: maybe paid" --> JOB
+  JOB -- ok --> ISSUED["ISSUED + paid on exposure<br/>+ audit + PAYMENT_ISSUED (outbox)"]
+```
+
+The claim module asks `ClaimFinancialsPort` whether it may close or be withdrawn, and financials
+implements it. A denial is proposed by the adjuster and applied by the approving supervisor
+([ADR-0024](adr/0024-financials-exposures-reserves-payments-and-maker-checker.md)). Concurrent payments
+on one exposure are serialised by a row lock ([ADR-0025](adr/0025-pessimistic-lock-on-the-exposure-for-payments.md)).
 
 ## Key decisions
 

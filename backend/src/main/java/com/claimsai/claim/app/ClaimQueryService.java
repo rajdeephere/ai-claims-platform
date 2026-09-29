@@ -5,6 +5,7 @@ import com.claimsai.audit.domain.AuditEvent;
 import com.claimsai.claim.app.ClaimDetails.TimelineEntry;
 import com.claimsai.claim.domain.Claim;
 import com.claimsai.claim.domain.ClaimAction;
+import com.claimsai.claim.domain.ClaimFinancialsPort;
 import com.claimsai.claim.domain.ClaimEnums.Segment;
 import com.claimsai.claim.domain.ClaimNote;
 import com.claimsai.claim.domain.ClaimStatus;
@@ -41,28 +42,30 @@ public class ClaimQueryService {
     private final ClaimAccess access;
     private final UserService users;
     private final AuditService audit;
+    private final ClaimFinancialsPort financials;
 
     public ClaimQueryService(ClaimRepository claims, InfoRequestRepository infoRequests, ClaimNoteRepository notes,
-                             ClaimAccess access, UserService users, AuditService audit) {
+                             ClaimAccess access, UserService users, AuditService audit, ClaimFinancialsPort financials) {
         this.claims = claims;
         this.infoRequests = infoRequests;
         this.notes = notes;
         this.access = access;
         this.users = users;
         this.audit = audit;
+        this.financials = financials;
     }
 
     /** Facts other modules' background work needs (no user: system access). */
     public record ClaimFacts(Long claimId, String claimNumber, String policyNumber, LocalDate lossDate,
                              String lossType, String description, BigDecimal estimatedLoss,
-                             ClaimStatus status) {
+                             ClaimStatus status, Long claimantUserId) {
     }
 
     public ClaimFacts facts(Long claimId) {
         Claim c = claims.findById(claimId).orElseThrow(() ->
                 new NotFoundException("CLAIM_NOT_FOUND", "Claim " + claimId + " not found"));
         return new ClaimFacts(c.getId(), c.getClaimNumber(), c.getPolicyNumber(), c.getLossDate(), c.getLossType().name(),
-                c.getDescription(), c.getEstimatedLoss(), c.getStatus());
+                c.getDescription(), c.getEstimatedLoss(), c.getStatus(), c.getClaimantUserId());
     }
 
     public ClaimDetails details(Long claimId, CurrentUser user) {
@@ -74,7 +77,8 @@ public class ClaimQueryService {
                 : users.refs(List.of(claim.getAssignedAdjusterId())).get(claim.getAssignedAdjusterId());
         InfoRequest openRequest = infoRequests.findByClaimIdAndStatus(claim.getId(), InfoRequest.Status.OPEN)
                 .orElse(null);
-        return new ClaimDetails(claim, adjuster, openRequest, ClaimAction.allowed(claim, user.id(), user.role()));
+        return new ClaimDetails(claim, adjuster, openRequest, ClaimAction.allowed(claim, user.id(), user.role()),
+                financials.position(claim.getId()).totalPaid());
     }
 
     public record QueuePage(Page<Claim> claims, Map<Long, UserRef> adjusters) {
