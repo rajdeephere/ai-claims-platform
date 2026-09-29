@@ -9,7 +9,8 @@ services:
     rootDir: backend
     dockerfilePath: ./Dockerfile
     healthCheckPath: /actuator/health
-    autoDeploy: true
+    # deploy a commit on main only after its GitHub checks (the CI workflow: tests, contract, builds) pass
+    autoDeployTrigger: checksPass
     envVars:
       - key: SPRING_PROFILES_ACTIVE
         value: prod

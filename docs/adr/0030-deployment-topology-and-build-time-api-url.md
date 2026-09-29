@@ -25,7 +25,8 @@ either way.
   no runtime config fetch before bootstrap.
 - **Infrastructure as files.**
   - `render.yaml` (Blueprint): Docker, free plan, health check. Secrets are declared with
-    `sync: false`, and `JWT_SECRET` is generated.
+    `sync: false`, and `JWT_SECRET` is generated. `autoDeployTrigger: checksPass` means a commit is
+    deployed only after its GitHub CI checks pass.
   - `frontend/vercel.json`: build, output, SPA rewrite, security headers.
   - `.github/workflows/keep-alive.yml`: pings the health check every 10 minutes (Render sleep, Supabase
     pause).
