@@ -16,8 +16,10 @@ flowchart LR
 
 ## 1. Supabase: database and storage
 
-1. Create a project at supabase.com (free plan). Choose a region near your users; note the
-   **database password**.
+1. Create a project at supabase.com (free plan). **Pick the region explicitly, the same as the API's**
+   (Render: Singapore → Supabase *Southeast Asia (Singapore)*, `ap-southeast-1`). The generic
+   "Asia-Pacific" choice may land elsewhere (it picked Tokyo once, costing ~75 ms per query; measured
+   below). Note the **database password**.
 2. **Database URL:** Project Settings → Database → Connection string → **Session pooler**
    (port 5432; the direct connection is IPv6-only, which Render can't reach). Split it into:
    - `DB_URL` = `jdbc:postgresql://aws-0-<region>.pooler.supabase.com:5432/postgres?sslmode=require`
@@ -92,6 +94,25 @@ deployment without demo users, set `FLYWAY_LOCATIONS=classpath:db/migration`.
 
 If the upload fails with a CORS error, Supabase Storage must allow the Vercel origin for PUT. It allows
 any origin by default; check the project's storage CORS settings.
+
+## Measured (warm, from India)
+
+| Request | DB in Tokyo | DB in Singapore (same region as the API) |
+|---|---|---|
+| Claim detail (~9 queries) | 0.91 s | 0.36 s |
+| Supervisor dashboard | 1.07 s | 0.44 s |
+| Work queue | 0.50 s | 0.33 s |
+
+About 0.25 s of every request is the free Render instance itself (shared CPU, proxy); the rest is database
+round trips, which is why the database must sit next to the API, not next to the user.
+
+## Troubleshooting
+
+| Symptom | Cause and fix |
+|---|---|
+| Flyway: "non-empty schema public but no schema history table" | Supabase objects in `public`; the prod profile baselines at 0 (BUG-015) |
+| `SSL error: Remote host terminated the handshake` / `Broken pipe` at startup | the Supabase pooler dropping connections from Render's shared IP (typically after failed logins, e.g. a wrong password during the first deploy). Fix the values, then pause ~30-60 min; startup retries the connection 10 times over ~4 min (BUG-016) |
+| `password authentication failed` | `DB_PASSWORD` differs from the project's; reset it in Supabase and paste it again |
 
 ## Costs and limits
 

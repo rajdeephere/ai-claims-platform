@@ -6,7 +6,7 @@ services:
     name: ai-claims-api
     runtime: docker
     plan: free
-    # nearest to the users (India) and to the database (Supabase ap-northeast-1); Render has no India/Tokyo region
+    # same region as the database (Supabase ap-southeast-1): each page makes several DB round trips (BUG-016)
     region: singapore
     rootDir: backend
     dockerfilePath: ./Dockerfile
