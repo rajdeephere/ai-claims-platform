@@ -23,7 +23,7 @@ import static com.tngtech.archunit.library.dependencies.SlicesRuleDefinition.sli
 class ArchitectureTest {
 
     /** Business modules with the api/app/domain/infra layout. */
-    private static final List<String> MODULES = List.of("identity", "claim", "policy", "audit");
+    private static final List<String> MODULES = List.of("identity", "claim", "policy", "audit", "notification");
 
     @ArchTest
     static void controllersDoNotUseRepositoriesDirectly(JavaClasses classes) {
@@ -61,6 +61,16 @@ class ArchitectureTest {
                     .because("another module's tables and adapters are its private implementation")
                     .check(classes);
         }
+    }
+
+    /** Notifications react to claim events; they may know the event vocabulary, nothing else of claims. */
+    @ArchTest
+    static void notificationsKnowOnlyTheClaimEventContract(JavaClasses classes) {
+        noClasses().that().resideInAPackage("com.claimsai.notification..")
+                .should().dependOnClassesThat().resideInAnyPackage("com.claimsai.claim.app..", "com.claimsai.claim.api..",
+                        "com.claimsai.claim.infra..")
+                .because("the outbox event is the only contract between the claim and notification modules")
+                .check(classes);
     }
 
     @ArchTest

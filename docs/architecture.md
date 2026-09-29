@@ -32,7 +32,8 @@ flowchart TB
 | `claim` | FNOL, claim state machine, policy check, triage, assignment, notes, portal and staff APIs | phase 2 |
 | `policy` | policy port and stub adapter | phase 2 |
 | `audit` | append-only audit trail, claim timeline | phase 2 |
-| `platform` | idempotency keys (phase 2); job queue, timers, transactional outbox (phase 3) | phase 2 |
+| `platform` | idempotency keys; job queue, timers, ops API; transactional outbox and relay; housekeeping | phase 2–3 |
+| `notification` | in-app claimant notifications, fed only by claim events | phase 3 |
 | `document` | storage port, presigned URLs, document lifecycle | phase 4 |
 | `ai` | LLM port, extraction, damage assessment, fraud score | phase 5 |
 | `exposure`, `payment`, `approval` | reserves, payments, authority limits, maker-checker | phase 6 |
@@ -70,9 +71,32 @@ sequenceDiagram
   C-->>UI: 200 + ETag "4" + allowedActions
 ```
 
-FNOL runs the same way, plus the idempotency record and, in phase 2, the intake steps (policy check,
-triage, assignment) in the same transaction
-([ADR-0014](adr/0014-synchronous-intake-until-the-job-queue.md)).
+Every command also appends its audit entries and outbox events in that same transaction.
+
+## Background work (phase 3)
+
+```mermaid
+flowchart LR
+  FNOL["FNOL transaction<br/>claim + audit + event + first job"] --> VP
+  subgraph Jobs["job table, polled every 2 s (SKIP LOCKED, leases, backoff)"]
+    VP["VERIFY_POLICY<br/>policy call outside any tx"] --> CA["COMPLETE_ASSESSMENT<br/>triage, assign"]
+    VP -.-> TO["ASSESSMENT_TIMEOUT<br/>timer, 10 min"]
+    TO -.-> CA
+  end
+  subgraph Outbox["outbox_event, relayed every 2 s"]
+    EV["CLAIM_SUBMITTED<br/>CLAIM_STATUS_CHANGED<br/>INFO_REQUESTED"]
+  end
+  FNOL --> EV
+  CA --> EV
+  EV --> NOTIFY["ClaimantNotifier<br/>(own tx + processed_event)"]
+```
+
+- Jobs commit with the change that needs them; handlers are idempotent; DONE only while holding the
+  lease ([ADR-0016](adr/0016-database-job-queue.md)).
+- Events commit with the change they describe; each listener handles each event once
+  ([ADR-0017](adr/0017-transactional-outbox-with-in-process-relay.md)).
+- Intake is a chain of jobs; FNOL answers immediately
+  ([ADR-0018](adr/0018-claim-intake-as-jobs.md)).
 
 ## Key decisions
 

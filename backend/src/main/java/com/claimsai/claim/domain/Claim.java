@@ -184,6 +184,14 @@ public class Claim {
         return previous;
     }
 
+    public void flagAssessmentTimedOut(Instant now) {
+        if (status != ClaimStatus.ASSESSING) {
+            throw new InvalidTransitionException("time out the assessment of", status);
+        }
+        addFlags(EnumSet.of(ClaimFlag.ASSESSMENT_TIMED_OUT));
+        updatedAt = now;
+    }
+
     public void markUnassigned(Instant now) {
         addFlags(EnumSet.of(ClaimFlag.UNASSIGNED));
         updatedAt = now;

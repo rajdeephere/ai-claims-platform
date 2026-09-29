@@ -15,7 +15,10 @@
 | [0011](0011-idempotent-fnol-with-idempotency-keys.md) | Idempotent FNOL with per-user Idempotency-Key | Accepted | 2 |
 | [0012](0012-separate-claimant-and-staff-apis-with-etag-if-match.md) | Separate claimant and staff APIs; ETag / If-Match on every command | Accepted | 2 |
 | [0013](0013-append-only-audit-trail.md) | Append-only audit trail, written in the business transaction | Accepted | 2 |
-| [0014](0014-synchronous-intake-until-the-job-queue.md) | Synchronous intake in phase 2, moved to jobs in phase 3 | Accepted (temporary) | 2 |
+| [0014](0014-synchronous-intake-until-the-job-queue.md) | Synchronous intake in phase 2, moved to jobs in phase 3 | Superseded by 0018 | 2 |
 | [0015](0015-claim-visibility-permission-and-status-checks.md) | Claim access: visibility (404), permission (403), status (409) | Accepted | 2 |
+| [0016](0016-database-job-queue.md) | Job queue in PostgreSQL: SKIP LOCKED, leases, backoff, timers | Accepted | 3 |
+| [0017](0017-transactional-outbox-with-in-process-relay.md) | Transactional outbox with an in-process relay | Accepted | 3 |
+| [0018](0018-claim-intake-as-jobs.md) | Claim intake as a chain of jobs | Accepted | 3 |
 
 New ADRs use [template.md](template.md).

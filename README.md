@@ -48,8 +48,11 @@ curl -s -X POST localhost:8081/api/v1/portal/claims -H "Authorization: Bearer $T
        "estimatedLoss":3800}'
 ```
 
-The claim is policy-checked, triaged and assigned to an adjuster straight away. Log in as that adjuster
-(or `supervisor1`) and use `/api/v1/claims`; every command needs the claim's ETag in `If-Match`.
+FNOL answers at once (`RECEIVED`); background jobs then check the policy, triage the claim and assign
+an adjuster within a few seconds. The claimant's notifications are at `/api/v1/portal/notifications`.
+
+Log in as the assigned adjuster (or `supervisor1`) and use `/api/v1/claims`; every command needs the
+claim's ETag in `If-Match`. Failed background jobs are listed for supervisors at `/api/v1/ops/jobs`.
 Demo policies are listed in [phase 2](docs/phases/phase-02-claim-core.md#demo-policies).
 
 ## Tests

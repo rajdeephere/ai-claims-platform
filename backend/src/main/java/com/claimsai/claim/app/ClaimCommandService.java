@@ -60,7 +60,7 @@ public class ClaimCommandService {
         // race hits the one-open-request unique index: a 500 instead of a clean 409.
         claims.flush();
         InfoRequest request = infoRequests.save(new InfoRequest(claim.getId(), message, user.id(), now));
-        auditTrail.event(claim, "INFO_REQUESTED", actor(user), null, Map.of("infoRequestId", request.getId()), message);
+        auditTrail.infoRequested(claim, request.getId(), message, actor(user));
         auditTrail.transition(claim, transition, actor(user), null);
         return flushed(claim);
     }

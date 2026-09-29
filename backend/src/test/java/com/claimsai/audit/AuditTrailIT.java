@@ -2,17 +2,12 @@ package com.claimsai.audit;
 
 import com.claimsai.support.IntegrationTest;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.core.simple.JdbcClient;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /** The audit trail can't be rewritten, not even with direct SQL that bypasses the application. */
 class AuditTrailIT extends IntegrationTest {
-
-    @Autowired
-    private JdbcClient jdbc;
 
     @Test
     void auditEventsCanBeInsertedButNeverUpdatedOrDeleted() {

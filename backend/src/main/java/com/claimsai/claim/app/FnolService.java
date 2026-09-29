@@ -1,5 +1,6 @@
 package com.claimsai.claim.app;
 
+import com.claimsai.claim.app.intake.ClaimIntakeService;
 import com.claimsai.claim.domain.Claim;
 import com.claimsai.claim.domain.Claim.LossReport;
 import com.claimsai.claim.infra.ClaimRepository;
@@ -19,12 +20,14 @@ import org.springframework.transaction.support.TransactionTemplate;
 import java.math.RoundingMode;
 import java.time.Clock;
 import java.time.LocalDate;
-import java.util.Map;
 import java.util.Optional;
 
 /**
  * First notice of loss. Idempotent (ADR-0011): a retry with the same Idempotency-Key returns the claim the
  * first request created instead of a second claim.
+ *
+ * <p>FNOL only records the claim; policy check, triage and assignment follow as background jobs
+ * (ADR-0018), so the response is fast and doesn't depend on the policy system being up.
  *
  * <p>The transaction is programmatic because of the race: two requests with the same key can both find no
  * record and both insert. The loser's commit fails on the primary key; we catch that <em>after</em> its
@@ -83,10 +86,10 @@ public class FnolService {
         Claim claim = Claim.submit(claimNumbers.next(), report, claimantUserId, user.id(), LocalDate.now(clock),
                 clock.instant());
         claims.save(claim);
-        auditTrail.event(claim, "CLAIM_SUBMITTED", ClaimAuditTrail.actor(user), null,
-                Map.of("claimNumber", claim.getClaimNumber(), "policyNumber", claim.getPolicyNumber(),
-                        "lossType", claim.getLossType().name()), null);
-        intake.process(claim);
+        auditTrail.submitted(claim, ClaimAuditTrail.actor(user));
+        // The claim, its audit entry, its CLAIM_SUBMITTED event, the first intake job and the idempotency
+        // record commit together: no claim can exist without the work that moves it on.
+        intake.start(claim);
         idempotency.remember(user.id(), key, OPERATION, requestHash, claim.getId());
         return new FnolResult(claim, false);
     }

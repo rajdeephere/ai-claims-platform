@@ -20,6 +20,8 @@ public final class ClaimEnums {
         POLICY_NOT_IN_FORCE,
         NOT_COVERED,
         HOLDER_MISMATCH,
-        UNASSIGNED
+        UNASSIGNED,
+        /** The assessment didn't finish in time; the claim moved on without it. */
+        ASSESSMENT_TIMED_OUT
     }
 }

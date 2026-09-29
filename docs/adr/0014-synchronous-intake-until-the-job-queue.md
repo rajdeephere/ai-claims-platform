@@ -1,6 +1,6 @@
 # ADR-0014: Synchronous claim intake in phase 2, moved to jobs in phase 3
 
-- **Status:** Accepted (temporary; superseded in phase 3)
+- **Status:** Superseded by [ADR-0018](0018-claim-intake-as-jobs.md) (phase 3)
 - **Date:** 2026-09-29
 - **Phase:** 2
 

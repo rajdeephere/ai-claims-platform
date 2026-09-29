@@ -3,3 +3,8 @@ app:
   security:
     jwt:
       secret: test-secret-for-integration-tests-0123456789
+  # poll fast so background work finishes within a test
+  jobs:
+    poll-interval-ms: 100
+  outbox:
+    poll-interval-ms: 100

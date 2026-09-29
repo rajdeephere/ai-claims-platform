@@ -8,7 +8,7 @@ ADRs, and a commit made by the developer.
 |---|---|---|---|
 | 1 | Foundation | Maven project (Java 17, Spring Boot 3.5), Postgres + Flyway, JWT login with 4 roles and refresh-token rotation, error model, correlation ID, OpenAPI contract check, ArchUnit rules, Dockerfile, CI | ✅ |
 | 2 | Claim core | Policy stub, FNOL with idempotency key, claim state machine, claim number, claimant vs staff views, visibility rules, audit trail, timeline, ETag / If-Match | ✅ |
-| 3 | Jobs and timers | Database job queue (`SKIP LOCKED`, leases, backoff), transactional outbox + relay, policy verification job, assessment timeout | ⏳ |
+| 3 | Jobs and timers | Database job queue (`SKIP LOCKED`, leases, backoff), transactional outbox + relay, policy verification job, assessment timeout, claimant notifications, ops API, housekeeping | ✅ |
 | 4 | Documents | Storage port, MinIO locally, Supabase S3 in the cloud, presigned upload/download, content-type detection, SHA-256 de-duplication | ⏳ |
 | 5 | AI pipeline | LLM port, Groq client + stub, extraction and damage assessment, output validation, fraud score, triage and assignment | ⏳ |
 | 6 | Money and approvals | Exposures, reserves, payments, authority limits, maker-checker approvals, payment port with idempotency, denial requests | ⏳ |
