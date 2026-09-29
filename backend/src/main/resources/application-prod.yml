@@ -5,6 +5,13 @@
 #   project's region), STORAGE_BUCKET, STORAGE_ACCESS_KEY, STORAGE_SECRET_KEY (Supabase S3 access keys).
 #   The bucket must be private, and its CORS must allow PUT from the Vercel origin (browser uploads).
 #   AI_PROVIDER=groq and GROQ_API_KEY for real document assessment (stub otherwise).
+spring:
+  flyway:
+    # Supabase puts its own objects in "public" before we ever connect (e.g. rls_auto_enable() for the
+    # "automatic RLS" option), and Flyway refuses a non-empty schema without its history table (BUG-015).
+    # Baseline at version 0, not the default 1: every migration from V1 still runs.
+    baseline-on-migrate: true
+    baseline-version: 0
 server:
   # Render terminates TLS in a proxy: trust its X-Forwarded-* headers (client IP for the login limiter)
   forward-headers-strategy: framework

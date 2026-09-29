@@ -26,13 +26,19 @@ flowchart LR
 3. **Bucket:** Storage → New bucket `aiclaims-documents`, **private** (not public). Browsers only ever
    use presigned URLs.
 4. **S3 keys:** Storage → Settings → S3 connection → enable, then "New access key":
-   - `STORAGE_ENDPOINT` = `https://<project-ref>.supabase.co/storage/v1/s3`
+   - `STORAGE_ENDPOINT` = the **Endpoint** exactly as shown, e.g.
+     `https://<project-ref>.storage.supabase.co/storage/v1/s3` (newer projects have a dedicated
+     `.storage.` host; older ones `https://<project-ref>.supabase.co/storage/v1/s3`)
    - `STORAGE_REGION` = the region shown there (e.g. `ap-south-1`)
    - `STORAGE_ACCESS_KEY` / `STORAGE_SECRET_KEY` = the new key pair (the secret is shown once)
 
 5. **Turn off the Data API:** Project Settings → Data API → disable it (or remove `public` from the
    exposed schemas). The app talks to Postgres only over JDBC. Supabase would otherwise publish every
    table in `public` over REST, and Flyway-created tables have no row-level security.
+
+Supabase puts a few objects of its own into `public` (for example `rls_auto_enable()` when "automatic RLS"
+is ticked). The prod profile therefore sets `baseline-on-migrate` at version 0, so Flyway accepts the
+schema and still runs every migration from V1 (BUG-015).
 
 Flyway creates the schema and the demo users on the first start (`db/migration` + `db/demo`). For a
 deployment without demo users, set `FLYWAY_LOCATIONS=classpath:db/migration`.

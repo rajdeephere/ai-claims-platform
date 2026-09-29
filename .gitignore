@@ -14,9 +14,10 @@ dist/
 .vscode/
 .DS_Store
 
-# Local secrets
+# Local secrets (e.g. deploy.local.env with the Supabase values for a local run against the cloud)
 .env
 *.env.local
+*.local.env
 
 # Personal interview study notes: kept locally, never committed
 interview-prep/

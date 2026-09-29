@@ -66,6 +66,13 @@ After that, a deployment that anyone can repeat on free tiers.
 3. **A refresh race by design.** A rotating one-time refresh token plus parallel 401s would revoke the
    session. The refresh is single-flight, and that is unit-tested.
 
+4. **Flyway refused the Supabase database (BUG-015).** Found in the first run against the real project:
+   "non-empty schema public but no schema history table". Supabase's "automatic RLS" option had created
+   `public.rls_auto_enable()`. The prod profile now baselines at version **0** (the default baseline, 1,
+   would have skipped V1). Verified: 10 migrations applied (15 s from Tokyo); FNOL, a presigned PUT to
+   Supabase Storage (200), completion, and the background AI (PROCESSED) all work; Supabase answers the
+   browser's CORS preflight with `*`.
+
 ## Not done here
 
 - **The actual first deployment:** it needs the developer's Supabase, Render and Vercel accounts;
