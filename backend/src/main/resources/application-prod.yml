@@ -12,6 +12,11 @@ spring:
     # Baseline at version 0, not the default 1: every migration from V1 still runs.
     baseline-on-migrate: true
     baseline-version: 0
+    # The first connection happens here, at startup. A managed pooler can refuse it for a moment (seen on
+    # Render -> Supabase: "Remote host terminated the handshake"), and one refusal used to fail the whole
+    # deploy. Retry with backoff instead: up to 10 attempts, waits growing to 30 s (about 4 minutes).
+    connect-retries: 10
+    connect-retries-interval: 30
 server:
   # Render terminates TLS in a proxy: trust its X-Forwarded-* headers (client IP for the login limiter)
   forward-headers-strategy: framework
