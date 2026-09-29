@@ -48,7 +48,7 @@ public class JobOpsController {
     }
 
     @GetMapping
-    @Operation(summary = "Jobs by status, most recently changed first", description = "Default: FAILED")
+    @Operation(operationId = "listJobs", summary = "Jobs by status, most recently changed first", description = "Default: FAILED")
     public PageResponse<JobView> list(@RequestParam(defaultValue = "FAILED") Job.Status status,
                                       @RequestParam(defaultValue = "0") @Min(0) int page,
                                       @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {
@@ -57,7 +57,7 @@ public class JobOpsController {
     }
 
     @PostMapping("/{id}/retry")
-    @Operation(summary = "Retry a FAILED job now, with a fresh set of attempts")
+    @Operation(operationId = "retryJob", summary = "Retry a FAILED job now, with a fresh set of attempts")
     @DocumentedErrors({404, 409})
     public JobView retry(@PathVariable Long id) {
         return JobView.of(jobs.retry(id));

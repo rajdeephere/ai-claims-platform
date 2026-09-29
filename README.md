@@ -19,16 +19,18 @@ engine, and the whole system is designed to run on free-tier hosting.
 
 ## Stack
 
-Java 17 · Spring Boot 3.5 · Spring Security (JWT) · Spring Data JPA · PostgreSQL 16 · Flyway · springdoc
-OpenAPI · JUnit 5 · Testcontainers · ArchUnit · Docker · GitHub Actions · Angular (phase 8) ·
+Java 17 · Spring Boot 3.5 · Spring Security (JWT) · Spring Data JPA · PostgreSQL 16 · Flyway ·
+S3 API (AWS SDK v2; SeaweedFS locally, Supabase Storage in the cloud) · Apache Tika · springdoc OpenAPI ·
+JUnit 5 · Testcontainers · ArchUnit · Awaitility · Docker · GitHub Actions · Angular (phase 8) ·
 Vercel, Render, Supabase, Groq
 
 ## Run locally
 
-Requires Java 17+, Maven and Docker.
+Requires Java 17+, Maven and Docker. (On Git Bash for Windows, run compose as
+`MSYS_NO_PATHCONV=1 docker compose up -d --wait`, or it rewrites container paths.)
 
 ```bash
-docker compose up -d --wait          # PostgreSQL on localhost:5434
+docker compose up -d --wait          # PostgreSQL on :5434, SeaweedFS (S3) on :8333
 cd backend
 mvn spring-boot:run                  # API on http://localhost:8081 (profile: local)
 ```
@@ -53,6 +55,10 @@ an adjuster within a few seconds. The claimant's notifications are at `/api/v1/p
 
 Log in as the assigned adjuster (or `supervisor1`) and use `/api/v1/claims`; every command needs the
 claim's ETag in `If-Match`. Failed background jobs are listed for supervisors at `/api/v1/ops/jobs`.
+
+Documents: `POST /api/v1/portal/claims/{id}/documents` returns a presigned URL; PUT the file there, then
+`POST /api/v1/portal/documents/{docId}/complete`. See [phase 4](docs/phases/phase-04-documents.md).
+
 Demo policies are listed in [phase 2](docs/phases/phase-02-claim-core.md#demo-policies).
 
 ## Tests
@@ -60,7 +66,7 @@ Demo policies are listed in [phase 2](docs/phases/phase-02-claim-core.md#demo-po
 ```bash
 cd backend
 mvn test      # unit + architecture rules
-mvn verify    # + integration tests on Testcontainers PostgreSQL, OpenAPI contract check, coverage
+mvn verify    # + integration tests on Testcontainers (PostgreSQL, SeaweedFS), OpenAPI contract check, coverage
 ```
 
 If the API changes on purpose, regenerate the contract and review the diff:

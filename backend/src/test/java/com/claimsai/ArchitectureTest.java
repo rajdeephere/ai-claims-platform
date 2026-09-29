@@ -23,7 +23,7 @@ import static com.tngtech.archunit.library.dependencies.SlicesRuleDefinition.sli
 class ArchitectureTest {
 
     /** Business modules with the api/app/domain/infra layout. */
-    private static final List<String> MODULES = List.of("identity", "claim", "policy", "audit", "notification");
+    private static final List<String> MODULES = List.of("identity", "claim", "policy", "audit", "notification", "document");
 
     @ArchTest
     static void controllersDoNotUseRepositoriesDirectly(JavaClasses classes) {

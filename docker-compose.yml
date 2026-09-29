@@ -17,5 +17,25 @@ services:
       timeout: 3s
       retries: 20
 
+  # S3-compatible object storage for documents (Supabase Storage in the cloud; same S3 API).
+  # SeaweedFS, not MinIO: MinIO stopped publishing free images in 2025 (ADR-0019).
+  seaweedfs:
+    image: chrislusf/seaweedfs:4.48
+    container_name: aiclaims-seaweedfs
+    command: server -dir=/data -s3 -s3.port=8333 -s3.config=/etc/seaweedfs/s3.json
+    ports:
+      - "8333:8333"   # S3 API
+    volumes:
+      - ./infra/seaweedfs/s3.json:/etc/seaweedfs/s3.json:ro
+      - seaweed:/data
+    healthcheck:
+      # anonymous requests are refused (403): any HTTP answer means the S3 API is up
+      # 127.0.0.1, not localhost: inside the container localhost resolves to IPv6, where S3 doesn't listen
+      test: ["CMD-SHELL", "curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8333/ | grep -q 403"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
 volumes:
   pgdata:
+  seaweed:

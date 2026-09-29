@@ -20,5 +20,7 @@
 | [0016](0016-database-job-queue.md) | Job queue in PostgreSQL: SKIP LOCKED, leases, backoff, timers | Accepted | 3 |
 | [0017](0017-transactional-outbox-with-in-process-relay.md) | Transactional outbox with an in-process relay | Accepted | 3 |
 | [0018](0018-claim-intake-as-jobs.md) | Claim intake as a chain of jobs | Accepted | 3 |
+| [0019](0019-documents-presigned-upload-and-verification.md) | Documents: presigned direct upload, verified on completion; SeaweedFS / Supabase Storage | Accepted | 4 |
+| [0020](0020-stable-explicit-operation-ids.md) | Explicit, stable operationIds on every endpoint | Accepted | 4 |
 
 New ADRs use [template.md](template.md).

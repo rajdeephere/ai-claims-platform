@@ -56,7 +56,7 @@ management:
 
 app:
   api:
-    version: 1.2.0   # minor: phase 3 added ops and notification endpoints (non-breaking, ADR-0008)
+    version: 1.3.0   # minor: phase 4 added document endpoints (non-breaking, ADR-0008)
     server-url: ${API_PUBLIC_URL:http://localhost:8081}
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:4200}
@@ -85,6 +85,20 @@ app:
     cron: "0 17 * * * *"          # hourly, at minute 17
     idempotency-retention: 24h
     finished-work-retention: 7d
+  # Object storage for documents (ADR-0019): any S3-compatible store
+  storage:
+    endpoint: ${STORAGE_ENDPOINT}
+    presign-endpoint: ${STORAGE_PRESIGN_ENDPOINT:}
+    region: ${STORAGE_REGION:us-east-1}
+    bucket: ${STORAGE_BUCKET:aiclaims-documents}
+    access-key: ${STORAGE_ACCESS_KEY}
+    secret-key: ${STORAGE_SECRET_KEY}
+    create-bucket: false
+    upload-url-ttl: 5m
+    download-url-ttl: 5m
+  documents:
+    abandoned-after: 24h           # PENDING_UPLOAD rows (and objects) older than this are removed
+    sweep-cron: "0 23 * * * *"
   intake:
     # if the assessment (AI, phase 5) hasn't finished by then, the claim moves on without it
     assessment-timeout: 10m

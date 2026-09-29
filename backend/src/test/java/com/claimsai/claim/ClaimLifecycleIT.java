@@ -58,7 +58,8 @@ class ClaimLifecycleIT extends IntegrationTest {
         ResponseEntity<PortalClaimResponse> seen = get("claimant1", portal(id), PortalClaimResponse.class);
         assertThat(seen.getBody().status()).isEqualTo(ClaimantStatus.ACTION_NEEDED);
         assertThat(seen.getBody().openInfoRequest().message()).isEqualTo("Please upload the repair estimate");
-        assertThat(seen.getBody().allowedActions()).containsExactlyInAnyOrder(ClaimAction.RESPOND, ClaimAction.WITHDRAW);
+        assertThat(seen.getBody().allowedActions()).containsExactlyInAnyOrder(ClaimAction.RESPOND, ClaimAction.WITHDRAW,
+                ClaimAction.UPLOAD_DOCUMENT);
 
         // the claimant answers with the ETag of their own view (same version)
         ResponseEntity<PortalClaimResponse> answered = postIfMatch("claimant1", portal(id) + "/respond",

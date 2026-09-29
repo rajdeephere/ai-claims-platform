@@ -1,0 +1,9 @@
+{
+  "identities": [
+    {
+      "name": "aiclaims",
+      "credentials": [{ "accessKey": "aiclaims", "secretKey": "aiclaims-local-secret" }],
+      "actions": ["Admin", "Read", "Write", "List", "Tagging"]
+    }
+  ]
+}

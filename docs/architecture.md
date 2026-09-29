@@ -34,7 +34,7 @@ flowchart TB
 | `audit` | append-only audit trail, claim timeline | phase 2 |
 | `platform` | idempotency keys; job queue, timers, ops API; transactional outbox and relay; housekeeping | phase 2–3 |
 | `notification` | in-app claimant notifications, fed only by claim events | phase 3 |
-| `document` | storage port, presigned URLs, document lifecycle | phase 4 |
+| `document` | storage port (S3 adapter), presigned upload/download, verification (type, size, hash), document lifecycle | phase 4 |
 | `ai` | LLM port, extraction, damage assessment, fraud score | phase 5 |
 | `exposure`, `payment`, `approval` | reserves, payments, authority limits, maker-checker | phase 6 |
 | `siu`, `activity` | fraud investigations, tasks, SLA escalation | phase 7 |
@@ -97,6 +97,24 @@ flowchart LR
   ([ADR-0017](adr/0017-transactional-outbox-with-in-process-relay.md)).
 - Intake is a chain of jobs; FNOL answers immediately
   ([ADR-0018](adr/0018-claim-intake-as-jobs.md)).
+
+## Document upload (phase 4)
+
+```mermaid
+sequenceDiagram
+  participant B as Browser
+  participant API
+  participant S3 as Object storage (SeaweedFS / Supabase)
+  B->>API: POST /claims/{id}/documents {name, type, size}
+  API-->>B: 201 PENDING_UPLOAD + presigned PUT (type and exact size signed, 5 min)
+  B->>S3: PUT file (never through the API)
+  B->>API: POST /documents/{id}/complete
+  API->>S3: HEAD + GET (outside any transaction)
+  API->>API: Tika type from bytes, SHA-256, duplicate check
+  API-->>B: UPLOADED / duplicate / 422 REJECTED (object deleted)
+```
+
+See [ADR-0019](adr/0019-documents-presigned-upload-and-verification.md).
 
 ## Key decisions
 

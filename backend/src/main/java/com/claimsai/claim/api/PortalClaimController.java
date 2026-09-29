@@ -58,7 +58,7 @@ public class PortalClaimController {
     }
 
     @PostMapping
-    @Operation(summary = "Report a loss (FNOL)",
+    @Operation(operationId = "reportMyLoss", summary = "Report a loss (FNOL)",
             description = "Send a new Idempotency-Key (e.g. a UUID) per claim and reuse it on retries: a retry returns "
                     + "the claim already created, with the header Idempotent-Replayed: true.")
     @ApiResponse(responseCode = "201", description = "Claim created (or replayed); Location and ETag headers set")
@@ -77,7 +77,7 @@ public class PortalClaimController {
     }
 
     @GetMapping
-    @Operation(summary = "My claims, newest first")
+    @Operation(operationId = "listMyClaims", summary = "My claims, newest first")
     public PageResponse<PortalClaimSummary> myClaims(@RequestParam(defaultValue = "0") @Min(0) int page,
                                                      @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {
         return PageResponse.of(queries.filedBy(currentUser.get(), Paging.newestFirst(page, size)),
@@ -85,7 +85,7 @@ public class PortalClaimController {
     }
 
     @GetMapping("/{id}")
-    @Operation(summary = "One of my claims")
+    @Operation(operationId = "getMyClaim", summary = "One of my claims")
     @DocumentedErrors({404})
     public ResponseEntity<PortalClaimResponse> myClaim(@PathVariable Long id) {
         var details = queries.details(id, currentUser.get());
@@ -93,7 +93,7 @@ public class PortalClaimController {
     }
 
     @PostMapping("/{id}/respond")
-    @Operation(summary = "Answer the adjuster's information request", description = "AWAITING_INFO -> OPEN")
+    @Operation(operationId = "respondToInfoRequest", summary = "Answer the adjuster's information request", description = "AWAITING_INFO -> OPEN")
     @DocumentedErrors({404, 409, 412, 428})
     public ResponseEntity<PortalClaimResponse> respond(@PathVariable Long id,
                                                        @RequestHeader(name = HttpHeaders.IF_MATCH, required = false) String ifMatch,
@@ -103,7 +103,7 @@ public class PortalClaimController {
     }
 
     @PostMapping("/{id}/withdraw")
-    @Operation(summary = "Withdraw my claim", description = "OPEN or AWAITING_INFO -> CLOSED (WITHDRAWN)")
+    @Operation(operationId = "withdrawMyClaim", summary = "Withdraw my claim", description = "OPEN or AWAITING_INFO -> CLOSED (WITHDRAWN)")
     @DocumentedErrors({404, 409, 412, 422, 428})
     public ResponseEntity<PortalClaimResponse> withdraw(@PathVariable Long id,
                                                         @RequestHeader(name = HttpHeaders.IF_MATCH, required = false) String ifMatch,

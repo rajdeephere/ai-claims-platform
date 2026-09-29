@@ -9,7 +9,7 @@ ADRs, and a commit made by the developer.
 | 1 | Foundation | Maven project (Java 17, Spring Boot 3.5), Postgres + Flyway, JWT login with 4 roles and refresh-token rotation, error model, correlation ID, OpenAPI contract check, ArchUnit rules, Dockerfile, CI | ✅ |
 | 2 | Claim core | Policy stub, FNOL with idempotency key, claim state machine, claim number, claimant vs staff views, visibility rules, audit trail, timeline, ETag / If-Match | ✅ |
 | 3 | Jobs and timers | Database job queue (`SKIP LOCKED`, leases, backoff), transactional outbox + relay, policy verification job, assessment timeout, claimant notifications, ops API, housekeeping | ✅ |
-| 4 | Documents | Storage port, MinIO locally, Supabase S3 in the cloud, presigned upload/download, content-type detection, SHA-256 de-duplication | ⏳ |
+| 4 | Documents | Storage port, SeaweedFS locally (MinIO images discontinued), Supabase S3 in the cloud, presigned upload/download, content-type detection, SHA-256 de-duplication, abandoned-upload clean-up | ✅ |
 | 5 | AI pipeline | LLM port, Groq client + stub, extraction and damage assessment, output validation, fraud score, triage and assignment | ⏳ |
 | 6 | Money and approvals | Exposures, reserves, payments, authority limits, maker-checker approvals, payment port with idempotency, denial requests | ⏳ |
 | 7 | SIU, information requests, SLA | SIU cases and payment hold, request-info timers, activities and escalation, recovery, close and reopen | ⏳ |
@@ -29,5 +29,5 @@ ADRs, and a commit made by the developer.
 |---|---|---|
 | API | 8081 | 8080 is used by a local Apache; 8000 by ClaimFlow's gateway |
 | PostgreSQL | 5434 | 5432 is a local Postgres install, 5433 is ClaimFlow |
-| MinIO (phase 4) | 9000 / 9001 | |
+| SeaweedFS S3 API (phase 4) | 8333 | |
 | Angular (phase 8) | 4200 | |

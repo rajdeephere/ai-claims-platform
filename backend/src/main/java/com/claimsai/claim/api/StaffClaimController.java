@@ -69,7 +69,7 @@ public class StaffClaimController {
 
     @PostMapping
     @PreAuthorize("hasRole('ADJUSTER')")
-    @Operation(summary = "Report a loss taken by phone (FNOL)", description = "contactName is required. Idempotent "
+    @Operation(operationId = "reportLossByPhone", summary = "Report a loss taken by phone (FNOL)", description = "contactName is required. Idempotent "
             + "with Idempotency-Key, as in the portal.")
     @ApiResponse(responseCode = "201", description = "Claim created (or replayed); Location and ETag headers set")
     @DocumentedErrors({422})
@@ -88,7 +88,7 @@ public class StaffClaimController {
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADJUSTER', 'SUPERVISOR')")
-    @Operation(summary = "Work queue, newest first",
+    @Operation(operationId = "listClaims", summary = "Work queue, newest first",
             description = "Adjusters always get their own claims (assigneeId is ignored); supervisors see all.")
     public PageResponse<StaffClaimSummary> queue(@RequestParam(required = false) ClaimStatus status,
                                                  @RequestParam(required = false) Segment segment,
@@ -101,7 +101,7 @@ public class StaffClaimController {
     }
 
     @GetMapping("/{id}")
-    @Operation(summary = "Claim detail", description = "ETag = version; send it as If-Match on commands")
+    @Operation(operationId = "getClaim", summary = "Claim detail", description = "ETag = version; send it as If-Match on commands")
     @DocumentedErrors({404})
     public ResponseEntity<StaffClaimResponse> claim(@PathVariable Long id) {
         var details = queries.details(id, currentUser.get());
@@ -109,14 +109,14 @@ public class StaffClaimController {
     }
 
     @GetMapping("/{id}/timeline")
-    @Operation(summary = "Audit trail and notes, oldest first")
+    @Operation(operationId = "getClaimTimeline", summary = "Audit trail and notes, oldest first")
     @DocumentedErrors({404})
     public List<TimelineEntryResponse> timeline(@PathVariable Long id) {
         return queries.timeline(id, currentUser.get()).stream().map(ClaimApiMapper::toTimeline).toList();
     }
 
     @PostMapping("/{id}/request-info")
-    @Operation(summary = "Ask the claimant for information", description = "OPEN -> AWAITING_INFO (assigned adjuster)")
+    @Operation(operationId = "requestInformation", summary = "Ask the claimant for information", description = "OPEN -> AWAITING_INFO (assigned adjuster)")
     @DocumentedErrors({404, 409, 412, 428})
     public ResponseEntity<StaffClaimResponse> requestInfo(@PathVariable Long id,
                                                           @RequestHeader(name = IF_MATCH, required = false) String ifMatch,
@@ -126,7 +126,7 @@ public class StaffClaimController {
     }
 
     @PostMapping("/{id}/close")
-    @Operation(summary = "Close the claim", description = "OPEN -> CLOSED (assigned adjuster)")
+    @Operation(operationId = "closeClaim", summary = "Close the claim", description = "OPEN -> CLOSED (assigned adjuster)")
     @DocumentedErrors({404, 409, 412, 428})
     public ResponseEntity<StaffClaimResponse> close(@PathVariable Long id,
                                                     @RequestHeader(name = IF_MATCH, required = false) String ifMatch,
@@ -136,7 +136,7 @@ public class StaffClaimController {
     }
 
     @PostMapping("/{id}/reopen")
-    @Operation(summary = "Reopen a closed claim", description = "CLOSED -> OPEN (supervisor)")
+    @Operation(operationId = "reopenClaim", summary = "Reopen a closed claim", description = "CLOSED -> OPEN (supervisor)")
     @DocumentedErrors({404, 409, 412, 428})
     public ResponseEntity<StaffClaimResponse> reopen(@PathVariable Long id,
                                                      @RequestHeader(name = IF_MATCH, required = false) String ifMatch,
@@ -146,7 +146,7 @@ public class StaffClaimController {
     }
 
     @PostMapping("/{id}/reassign")
-    @Operation(summary = "Assign to another adjuster (supervisor)")
+    @Operation(operationId = "reassignClaim", summary = "Assign to another adjuster (supervisor)")
     @DocumentedErrors({404, 409, 412, 422, 428})
     public ResponseEntity<StaffClaimResponse> reassign(@PathVariable Long id,
                                                        @RequestHeader(name = IF_MATCH, required = false) String ifMatch,
@@ -156,7 +156,7 @@ public class StaffClaimController {
     }
 
     @PostMapping("/{id}/notes")
-    @Operation(summary = "Add an internal note (never shown to the claimant)")
+    @Operation(operationId = "addClaimNote", summary = "Add an internal note (never shown to the claimant)")
     @ApiResponse(responseCode = "201", description = "Note added")
     @DocumentedErrors({404})
     public ResponseEntity<NoteResponse> addNote(@PathVariable Long id, @Valid @RequestBody NoteRequest request) {

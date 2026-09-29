@@ -44,6 +44,22 @@ class PlatformApiIT extends IntegrationTest {
         assertThat(replaced.getHeaders().getFirst("X-Correlation-Id")).isNotEqualTo("bad value with spaces").hasSize(36);
     }
 
+    /**
+     * The Angular client's method names come from operationIds. springdoc derives them from Java method names
+     * and adds "_1", "_2" on collisions, numbered by scan order: adding one controller renamed existing
+     * operations (BUG-005). Every operation must carry an explicit, unique id.
+     */
+    @Test
+    void everyOperationHasAnExplicitUniqueOperationId() throws Exception {
+        var paths = new com.fasterxml.jackson.databind.ObjectMapper()
+                .readTree(http.getForObject("/v3/api-docs/v1", String.class)).path("paths");
+        java.util.List<String> ids = new java.util.ArrayList<>();
+        paths.forEach(path -> path.forEach(operation -> ids.add(operation.path("operationId").asText())));
+
+        assertThat(ids).isNotEmpty().doesNotHaveDuplicates()
+                .allSatisfy(id -> assertThat(id).as("operationId").matches("[a-z][A-Za-z]+").doesNotMatch(".*_\\d+"));
+    }
+
     @Test
     void publishedOpenApiContractIsUpToDate() throws Exception {
         String live = http.getForObject("/v3/api-docs/v1", String.class);

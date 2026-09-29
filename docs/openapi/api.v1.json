@@ -46,6 +46,18 @@
           }
         }
       },
+      "DownloadLinkResponse" : {
+        "properties" : {
+          "expiresAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "url" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
       "FieldViolation" : {
         "properties" : {
           "field" : {
@@ -397,7 +409,7 @@
         "properties" : {
           "allowedActions" : {
             "items" : {
-              "enum" : [ "REQUEST_INFO", "CLOSE", "ADD_NOTE", "REASSIGN", "REOPEN", "RESPOND", "WITHDRAW" ],
+              "enum" : [ "REQUEST_INFO", "CLOSE", "ADD_NOTE", "REASSIGN", "REOPEN", "RESPOND", "WITHDRAW", "UPLOAD_DOCUMENT" ],
               "type" : "string"
             },
             "type" : "array",
@@ -479,6 +491,64 @@
         },
         "type" : "object"
       },
+      "PortalCompletion" : {
+        "description" : "duplicate = true: this exact file was already on the claim; 'document' is that one",
+        "properties" : {
+          "document" : {
+            "$ref" : "#/components/schemas/PortalDocumentView"
+          },
+          "duplicate" : {
+            "type" : "boolean"
+          }
+        },
+        "type" : "object"
+      },
+      "PortalDocumentView" : {
+        "properties" : {
+          "category" : {
+            "enum" : [ "DAMAGE_PHOTO", "REPAIR_ESTIMATE", "POLICE_REPORT", "INVOICE", "MEDICAL_REPORT", "OTHER" ],
+            "type" : "string"
+          },
+          "claimId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "contentType" : {
+            "type" : "string"
+          },
+          "fileName" : {
+            "type" : "string"
+          },
+          "id" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "sizeBytes" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "status" : {
+            "enum" : [ "PENDING_UPLOAD", "UPLOADED", "PROCESSING", "PROCESSED", "FAILED", "REJECTED" ],
+            "type" : "string"
+          },
+          "uploadedAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "PortalUploadResponse" : {
+        "properties" : {
+          "document" : {
+            "$ref" : "#/components/schemas/PortalDocumentView"
+          },
+          "upload" : {
+            "$ref" : "#/components/schemas/UploadInstructions"
+          }
+        },
+        "type" : "object"
+      },
       "ReasonRequest" : {
         "properties" : {
           "reason" : {
@@ -520,7 +590,7 @@
         "properties" : {
           "allowedActions" : {
             "items" : {
-              "enum" : [ "REQUEST_INFO", "CLOSE", "ADD_NOTE", "REASSIGN", "REOPEN", "RESPOND", "WITHDRAW" ],
+              "enum" : [ "REQUEST_INFO", "CLOSE", "ADD_NOTE", "REASSIGN", "REOPEN", "RESPOND", "WITHDRAW", "UPLOAD_DOCUMENT" ],
               "type" : "string"
             },
             "type" : "array",
@@ -666,6 +736,86 @@
         },
         "type" : "object"
       },
+      "StaffCompletion" : {
+        "properties" : {
+          "document" : {
+            "$ref" : "#/components/schemas/StaffDocumentView"
+          },
+          "duplicate" : {
+            "type" : "boolean"
+          }
+        },
+        "type" : "object"
+      },
+      "StaffDocumentView" : {
+        "properties" : {
+          "category" : {
+            "enum" : [ "DAMAGE_PHOTO", "REPAIR_ESTIMATE", "POLICE_REPORT", "INVOICE", "MEDICAL_REPORT", "OTHER" ],
+            "type" : "string"
+          },
+          "claimId" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "contentType" : {
+            "type" : "string"
+          },
+          "createdAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "declaredContentType" : {
+            "type" : "string"
+          },
+          "docType" : {
+            "type" : "string"
+          },
+          "fileName" : {
+            "type" : "string"
+          },
+          "id" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "rejectionReason" : {
+            "type" : "string"
+          },
+          "sha256" : {
+            "type" : "string"
+          },
+          "sizeBytes" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "status" : {
+            "enum" : [ "PENDING_UPLOAD", "UPLOADED", "PROCESSING", "PROCESSED", "FAILED", "REJECTED" ],
+            "type" : "string"
+          },
+          "uploadedAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "uploadedBy" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "visibleToClaimant" : {
+            "type" : "boolean"
+          }
+        },
+        "type" : "object"
+      },
+      "StaffUploadResponse" : {
+        "properties" : {
+          "document" : {
+            "$ref" : "#/components/schemas/StaffDocumentView"
+          },
+          "upload" : {
+            "$ref" : "#/components/schemas/UploadInstructions"
+          }
+        },
+        "type" : "object"
+      },
       "TimelineEntryResponse" : {
         "properties" : {
           "action" : {
@@ -742,6 +892,59 @@
         },
         "type" : "object"
       },
+      "UploadInstructions" : {
+        "description" : "PUT the file to uploadUrl with these headers before it expires, then call complete",
+        "properties" : {
+          "expiresAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "headers" : {
+            "additionalProperties" : {
+              "type" : "string"
+            },
+            "type" : "object"
+          },
+          "method" : {
+            "type" : "string"
+          },
+          "uploadUrl" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "UploadUrlRequest" : {
+        "properties" : {
+          "category" : {
+            "enum" : [ "DAMAGE_PHOTO", "REPAIR_ESTIMATE", "POLICE_REPORT", "INVOICE", "MEDICAL_REPORT", "OTHER" ],
+            "type" : "string"
+          },
+          "contentType" : {
+            "description" : "application/pdf, image/jpeg or image/png",
+            "example" : "application/pdf",
+            "maxLength" : 100,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "fileName" : {
+            "example" : "repair-estimate.pdf",
+            "maxLength" : 200,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "sizeBytes" : {
+            "description" : "Exact size in bytes; at most 10 MB",
+            "example" : 245760,
+            "format" : "int64",
+            "maximum" : 10485760,
+            "minimum" : 1,
+            "type" : "integer"
+          }
+        },
+        "required" : [ "category", "contentType", "fileName" ],
+        "type" : "object"
+      },
       "UserSummary" : {
         "properties" : {
           "displayName" : {
@@ -801,9 +1004,9 @@
     }
   },
   "info" : {
-    "description" : "Guidewire-style claims handling: FNOL, exposures, reserves, payments, approvals, SIU and AI document assessment.\n\nAPI version **v1** (contract 1.2.0). Breaking changes get `/api/v2`; additions bump the minor version.",
+    "description" : "Guidewire-style claims handling: FNOL, exposures, reserves, payments, approvals, SIU and AI document assessment.\n\nAPI version **v1** (contract 1.3.0). Breaking changes get `/api/v2`; additions bump the minor version.",
     "title" : "AI Claims Platform API",
-    "version" : "1.2.0"
+    "version" : "1.3.0"
   },
   "openapi" : "3.1.0",
   "paths" : {
@@ -931,7 +1134,7 @@
     "/api/v1/auth/refresh" : {
       "post" : {
         "description" : "The refresh token is single-use. Reusing an old one ends all of the user's sessions.",
-        "operationId" : "refresh",
+        "operationId" : "refreshTokens",
         "parameters" : [ {
           "$ref" : "#/components/parameters/CorrelationId"
         } ],
@@ -995,7 +1198,7 @@
     "/api/v1/claims" : {
       "get" : {
         "description" : "Adjusters always get their own claims (assigneeId is ignored); supervisors see all.",
-        "operationId" : "queue",
+        "operationId" : "listClaims",
         "parameters" : [ {
           "in" : "query",
           "name" : "status",
@@ -1101,7 +1304,7 @@
       },
       "post" : {
         "description" : "contactName is required. Idempotent with Idempotency-Key, as in the portal.",
-        "operationId" : "report_1",
+        "operationId" : "reportLossByPhone",
         "parameters" : [ {
           "in" : "header",
           "name" : "Idempotency-Key",
@@ -1188,10 +1391,201 @@
         "tags" : [ "Claims" ]
       }
     },
+    "/api/v1/claims/{claimId}/documents" : {
+      "get" : {
+        "operationId" : "listClaimDocuments",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "claimId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        }, {
+          "$ref" : "#/components/parameters/CorrelationId"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/StaffDocumentView"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "400" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Invalid request: malformed body, bad parameter or failed validation (see `violations`)"
+          },
+          "401" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Missing, invalid or expired access token"
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "The user's role does not allow this action"
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Not found, or not visible to this user"
+          },
+          "500" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Unexpected error (details are logged with the correlation ID, never returned)"
+          }
+        },
+        "summary" : "All documents on the claim, including rejected ones",
+        "tags" : [ "Documents" ]
+      },
+      "post" : {
+        "operationId" : "startDocumentUpload",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "claimId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        }, {
+          "$ref" : "#/components/parameters/CorrelationId"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UploadUrlRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/StaffUploadResponse"
+                }
+              }
+            },
+            "description" : "Upload URL issued (valid 5 minutes)"
+          },
+          "400" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Invalid request: malformed body, bad parameter or failed validation (see `violations`)"
+          },
+          "401" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Missing, invalid or expired access token"
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "The user's role does not allow this action"
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Not found, or not visible to this user"
+          },
+          "409" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Conflicts with the current state: invalid transition, duplicate or concurrent update"
+          },
+          "422" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Well-formed, but breaks a business rule"
+          },
+          "500" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Unexpected error (details are logged with the correlation ID, never returned)"
+          }
+        },
+        "summary" : "Start an upload (staff documents are not shown to the claimant)",
+        "tags" : [ "Documents" ]
+      }
+    },
     "/api/v1/claims/{id}" : {
       "get" : {
         "description" : "ETag = version; send it as If-Match on commands",
-        "operationId" : "claim",
+        "operationId" : "getClaim",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -1272,7 +1666,7 @@
     "/api/v1/claims/{id}/close" : {
       "post" : {
         "description" : "OPEN -> CLOSED (assigned adjuster)",
-        "operationId" : "close",
+        "operationId" : "closeClaim",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -1399,7 +1793,7 @@
     },
     "/api/v1/claims/{id}/notes" : {
       "post" : {
-        "operationId" : "addNote",
+        "operationId" : "addClaimNote",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -1489,7 +1883,7 @@
     },
     "/api/v1/claims/{id}/reassign" : {
       "post" : {
-        "operationId" : "reassign",
+        "operationId" : "reassignClaim",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -1627,7 +2021,7 @@
     "/api/v1/claims/{id}/reopen" : {
       "post" : {
         "description" : "CLOSED -> OPEN (supervisor)",
-        "operationId" : "reopen",
+        "operationId" : "reopenClaim",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -1755,7 +2149,7 @@
     "/api/v1/claims/{id}/request-info" : {
       "post" : {
         "description" : "OPEN -> AWAITING_INFO (assigned adjuster)",
-        "operationId" : "requestInfo",
+        "operationId" : "requestInformation",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -1882,7 +2276,7 @@
     },
     "/api/v1/claims/{id}/timeline" : {
       "get" : {
-        "operationId" : "timeline",
+        "operationId" : "getClaimTimeline",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -1963,9 +2357,199 @@
         "tags" : [ "Claims" ]
       }
     },
+    "/api/v1/documents/{id}/complete" : {
+      "post" : {
+        "operationId" : "completeDocumentUpload",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        }, {
+          "$ref" : "#/components/parameters/CorrelationId"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/StaffCompletion"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "400" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Invalid request: malformed body, bad parameter or failed validation (see `violations`)"
+          },
+          "401" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Missing, invalid or expired access token"
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "The user's role does not allow this action"
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Not found, or not visible to this user"
+          },
+          "409" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Conflicts with the current state: invalid transition, duplicate or concurrent update"
+          },
+          "422" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Well-formed, but breaks a business rule"
+          },
+          "500" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Unexpected error (details are logged with the correlation ID, never returned)"
+          }
+        },
+        "summary" : "Confirm the upload: the file is verified (real type, size, hash)",
+        "tags" : [ "Documents" ]
+      }
+    },
+    "/api/v1/documents/{id}/download-url" : {
+      "get" : {
+        "operationId" : "getDocumentDownloadUrl",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        }, {
+          "$ref" : "#/components/parameters/CorrelationId"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DownloadLinkResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "400" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Invalid request: malformed body, bad parameter or failed validation (see `violations`)"
+          },
+          "401" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Missing, invalid or expired access token"
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "The user's role does not allow this action"
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Not found, or not visible to this user"
+          },
+          "409" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Conflicts with the current state: invalid transition, duplicate or concurrent update"
+          },
+          "500" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Unexpected error (details are logged with the correlation ID, never returned)"
+          }
+        },
+        "summary" : "A download link valid for 5 minutes",
+        "tags" : [ "Documents" ]
+      }
+    },
     "/api/v1/me" : {
       "get" : {
-        "operationId" : "me",
+        "operationId" : "getCurrentUser",
         "parameters" : [ {
           "$ref" : "#/components/parameters/CorrelationId"
         } ],
@@ -2028,7 +2612,7 @@
     "/api/v1/ops/jobs" : {
       "get" : {
         "description" : "Default: FAILED",
-        "operationId" : "list_1",
+        "operationId" : "listJobs",
         "parameters" : [ {
           "in" : "query",
           "name" : "status",
@@ -2120,7 +2704,7 @@
     },
     "/api/v1/ops/jobs/{id}/retry" : {
       "post" : {
-        "operationId" : "retry",
+        "operationId" : "retryJob",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -2210,7 +2794,7 @@
     },
     "/api/v1/portal/claims" : {
       "get" : {
-        "operationId" : "myClaims",
+        "operationId" : "listMyClaims",
         "parameters" : [ {
           "in" : "query",
           "name" : "page",
@@ -2292,7 +2876,7 @@
       },
       "post" : {
         "description" : "Send a new Idempotency-Key (e.g. a UUID) per claim and reuse it on retries: a retry returns the claim already created, with the header Idempotent-Replayed: true.",
-        "operationId" : "report",
+        "operationId" : "reportMyLoss",
         "parameters" : [ {
           "in" : "header",
           "name" : "Idempotency-Key",
@@ -2379,9 +2963,201 @@
         "tags" : [ "Portal: my claims" ]
       }
     },
+    "/api/v1/portal/claims/{claimId}/documents" : {
+      "get" : {
+        "operationId" : "listMyClaimDocuments",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "claimId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        }, {
+          "$ref" : "#/components/parameters/CorrelationId"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/PortalDocumentView"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "400" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Invalid request: malformed body, bad parameter or failed validation (see `violations`)"
+          },
+          "401" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Missing, invalid or expired access token"
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "The user's role does not allow this action"
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Not found, or not visible to this user"
+          },
+          "500" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Unexpected error (details are logged with the correlation ID, never returned)"
+          }
+        },
+        "summary" : "Documents on my claim",
+        "tags" : [ "Portal: documents" ]
+      },
+      "post" : {
+        "description" : "PUT the file to upload.uploadUrl with upload.headers (the size must match exactly), then call POST /portal/documents/{id}/complete.",
+        "operationId" : "startMyDocumentUpload",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "claimId",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        }, {
+          "$ref" : "#/components/parameters/CorrelationId"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UploadUrlRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PortalUploadResponse"
+                }
+              }
+            },
+            "description" : "Upload URL issued (valid 5 minutes)"
+          },
+          "400" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Invalid request: malformed body, bad parameter or failed validation (see `violations`)"
+          },
+          "401" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Missing, invalid or expired access token"
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "The user's role does not allow this action"
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Not found, or not visible to this user"
+          },
+          "409" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Conflicts with the current state: invalid transition, duplicate or concurrent update"
+          },
+          "422" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Well-formed, but breaks a business rule"
+          },
+          "500" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Unexpected error (details are logged with the correlation ID, never returned)"
+          }
+        },
+        "summary" : "Start an upload: get a presigned URL",
+        "tags" : [ "Portal: documents" ]
+      }
+    },
     "/api/v1/portal/claims/{id}" : {
       "get" : {
-        "operationId" : "myClaim",
+        "operationId" : "getMyClaim",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -2462,7 +3238,7 @@
     "/api/v1/portal/claims/{id}/respond" : {
       "post" : {
         "description" : "AWAITING_INFO -> OPEN",
-        "operationId" : "respond",
+        "operationId" : "respondToInfoRequest",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -2590,7 +3366,7 @@
     "/api/v1/portal/claims/{id}/withdraw" : {
       "post" : {
         "description" : "OPEN or AWAITING_INFO -> CLOSED (WITHDRAWN)",
-        "operationId" : "withdraw",
+        "operationId" : "withdrawMyClaim",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -2725,9 +3501,200 @@
         "tags" : [ "Portal: my claims" ]
       }
     },
+    "/api/v1/portal/documents/{id}/complete" : {
+      "post" : {
+        "description" : "Rejected files (e.g. an executable renamed to .pdf) are deleted: 422. Uploading the same file twice returns the first document with duplicate = true.",
+        "operationId" : "completeMyDocumentUpload",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        }, {
+          "$ref" : "#/components/parameters/CorrelationId"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PortalCompletion"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "400" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Invalid request: malformed body, bad parameter or failed validation (see `violations`)"
+          },
+          "401" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Missing, invalid or expired access token"
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "The user's role does not allow this action"
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Not found, or not visible to this user"
+          },
+          "409" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Conflicts with the current state: invalid transition, duplicate or concurrent update"
+          },
+          "422" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Well-formed, but breaks a business rule"
+          },
+          "500" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Unexpected error (details are logged with the correlation ID, never returned)"
+          }
+        },
+        "summary" : "Confirm the upload: the file is verified (real type, size, hash)",
+        "tags" : [ "Portal: documents" ]
+      }
+    },
+    "/api/v1/portal/documents/{id}/download-url" : {
+      "get" : {
+        "operationId" : "getMyDocumentDownloadUrl",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        }, {
+          "$ref" : "#/components/parameters/CorrelationId"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DownloadLinkResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "400" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Invalid request: malformed body, bad parameter or failed validation (see `violations`)"
+          },
+          "401" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Missing, invalid or expired access token"
+          },
+          "403" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "The user's role does not allow this action"
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Not found, or not visible to this user"
+          },
+          "409" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Conflicts with the current state: invalid transition, duplicate or concurrent update"
+          },
+          "500" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description" : "Unexpected error (details are logged with the correlation ID, never returned)"
+          }
+        },
+        "summary" : "A download link valid for 5 minutes",
+        "tags" : [ "Portal: documents" ]
+      }
+    },
     "/api/v1/portal/notifications" : {
       "get" : {
-        "operationId" : "list",
+        "operationId" : "listMyNotifications",
         "parameters" : [ {
           "in" : "query",
           "name" : "page",
@@ -2810,7 +3777,7 @@
     },
     "/api/v1/portal/notifications/unread-count" : {
       "get" : {
-        "operationId" : "unread",
+        "operationId" : "getMyUnreadNotificationCount",
         "parameters" : [ {
           "$ref" : "#/components/parameters/CorrelationId"
         } ],
@@ -2872,7 +3839,7 @@
     },
     "/api/v1/portal/notifications/{id}/read" : {
       "post" : {
-        "operationId" : "markRead",
+        "operationId" : "markNotificationRead",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -2961,8 +3928,14 @@
     "description" : "Messages about my claims",
     "name" : "Portal: notifications"
   }, {
+    "description" : "Claim documents for staff",
+    "name" : "Documents"
+  }, {
     "description" : "Claim handling for staff",
     "name" : "Claims"
+  }, {
+    "description" : "Upload and download documents for my claims",
+    "name" : "Portal: documents"
   }, {
     "description" : "Background jobs",
     "name" : "Operations"

@@ -24,7 +24,7 @@ public class MeController {
     }
 
     @GetMapping
-    @Operation(summary = "The logged-in user, with their current authority limit")
+    @Operation(operationId = "getCurrentUser", summary = "The logged-in user, with their current authority limit")
     public MeResponse me() {
         // limit from the database, not the token: it may have changed since login
         AppUser user = userService.getActive(currentUser.get().id());

@@ -53,11 +53,11 @@ class FnolApiIT extends IntegrationTest {
         // FNOL only records the claim; policy check, triage and assignment follow as jobs (ADR-0018)
         assertThat(claim.status()).isEqualTo(ClaimantStatus.RECEIVED);
         assertThat(claim.estimatedLoss()).isEqualByComparingTo("3800.00");
-        assertThat(claim.allowedActions()).isEmpty();
+        assertThat(claim.allowedActions()).containsExactly(ClaimAction.UPLOAD_DOCUMENT);   // right after FNOL
 
         awaitIntake(claim.id());
         assertThat(get("claimant1", PORTAL + "/" + claim.id(), PortalClaimResponse.class).getBody().allowedActions())
-                .containsExactly(ClaimAction.WITHDRAW);
+                .containsExactlyInAnyOrder(ClaimAction.WITHDRAW, ClaimAction.UPLOAD_DOCUMENT);
         StaffClaimResponse staff = asSupervisor(claim.id());
         assertThat(staff.status()).isEqualTo(ClaimStatus.OPEN);
         assertThat(staff.policyVerification()).isEqualTo(PolicyVerification.VERIFIED);

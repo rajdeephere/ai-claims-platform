@@ -36,7 +36,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    @Operation(summary = "Log in", description = "Demo users: claimant1, claimant2, adjuster1, adjuster2, "
+    @Operation(operationId = "login", summary = "Log in", description = "Demo users: claimant1, claimant2, adjuster1, adjuster2, "
             + "supervisor1, siu1 (password Password1!)")
     @DocumentedErrors({401, 429})
     public TokenResponse login(@Valid @RequestBody LoginRequest request) {
@@ -44,7 +44,7 @@ public class AuthController {
     }
 
     @PostMapping("/refresh")
-    @Operation(summary = "Exchange a refresh token for new tokens",
+    @Operation(operationId = "refreshTokens", summary = "Exchange a refresh token for new tokens",
             description = "The refresh token is single-use. Reusing an old one ends all of the user's sessions.")
     @DocumentedErrors(401)
     public TokenResponse refresh(@Valid @RequestBody RefreshRequest request) {
@@ -52,7 +52,7 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    @Operation(summary = "Revoke a refresh token", description = "Always 204, even for an unknown token.")
+    @Operation(operationId = "logout", summary = "Revoke a refresh token", description = "Always 204, even for an unknown token.")
     // springdoc can't see the status inside ResponseEntity and would document 200 (BUG-002)
     @ApiResponse(responseCode = "204", description = "Revoked (or was already unknown or revoked)")
     public ResponseEntity<Void> logout(@Valid @RequestBody RefreshRequest request) {

@@ -21,7 +21,9 @@ public enum ClaimAction {
     REASSIGN(EnumSet.complementOf(EnumSet.of(ClaimStatus.CLOSED))),
     REOPEN(Set.of(ClaimStatus.CLOSED)),
     RESPOND(Set.of(ClaimStatus.AWAITING_INFO)),
-    WITHDRAW(Set.of(ClaimStatus.OPEN, ClaimStatus.AWAITING_INFO));
+    WITHDRAW(Set.of(ClaimStatus.OPEN, ClaimStatus.AWAITING_INFO)),
+    /** From the moment of FNOL until the claim is closed. */
+    UPLOAD_DOCUMENT(EnumSet.complementOf(EnumSet.of(ClaimStatus.CLOSED)));
 
     private final Set<ClaimStatus> statuses;
 
@@ -43,6 +45,8 @@ public enum ClaimAction {
             case ADD_NOTE -> role.isStaff();
             case REASSIGN, REOPEN -> role == Role.SUPERVISOR;
             case RESPOND, WITHDRAW -> role == Role.CLAIMANT && owner;
+            case UPLOAD_DOCUMENT -> (role == Role.CLAIMANT && owner) || (role == Role.ADJUSTER && assignee)
+                    || role == Role.SUPERVISOR;
         };
     }
 

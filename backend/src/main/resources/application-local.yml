@@ -6,6 +6,11 @@ spring:
     password: aiclaims
 
 app:
+  storage:
+    endpoint: http://localhost:8333          # SeaweedFS from docker-compose
+    access-key: aiclaims
+    secret-key: aiclaims-local-secret        # matches infra/seaweedfs/s3.json
+    create-bucket: true
   security:
     jwt:
       # development only; prod has no default and fails to start without JWT_SECRET

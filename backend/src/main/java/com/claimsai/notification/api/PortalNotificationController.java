@@ -47,7 +47,7 @@ public class PortalNotificationController {
     }
 
     @GetMapping
-    @Operation(summary = "My notifications, newest first")
+    @Operation(operationId = "listMyNotifications", summary = "My notifications, newest first")
     public PageResponse<NotificationView> list(@RequestParam(defaultValue = "0") @Min(0) int page,
                                                @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {
         return PageResponse.of(notifications.forRecipient(currentUser.get().id(), Paging.newestFirst(page, size)),
@@ -55,13 +55,13 @@ public class PortalNotificationController {
     }
 
     @GetMapping("/unread-count")
-    @Operation(summary = "Number of unread notifications (for the badge)")
+    @Operation(operationId = "getMyUnreadNotificationCount", summary = "Number of unread notifications (for the badge)")
     public UnreadCount unread() {
         return new UnreadCount(notifications.unread(currentUser.get().id()));
     }
 
     @PostMapping("/{id}/read")
-    @Operation(summary = "Mark as read (idempotent)")
+    @Operation(operationId = "markNotificationRead", summary = "Mark as read (idempotent)")
     @DocumentedErrors({404})
     public NotificationView markRead(@PathVariable Long id) {
         return NotificationView.of(notifications.markRead(id, currentUser.get().id()));
