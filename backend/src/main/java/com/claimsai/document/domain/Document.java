@@ -122,6 +122,28 @@ public class Document {
         this.sizeBytes = size;
     }
 
+    // ---- AI processing (phase 5) ----
+
+    public void startProcessing() {
+        if (status == Status.UPLOADED || status == Status.FAILED) {
+            status = Status.PROCESSING;
+        }
+    }
+
+    public void processed(String detectedDocType) {
+        status = Status.PROCESSED;
+        docType = detectedDocType;
+    }
+
+    public void processingFailed() {
+        status = Status.FAILED;
+    }
+
+    /** Verified but not yet assessed: the claim's triage waits for it. */
+    public boolean isAwaitingAssessment() {
+        return status == Status.UPLOADED || status == Status.PROCESSING;
+    }
+
     public boolean isPending() {
         return status == Status.PENDING_UPLOAD;
     }

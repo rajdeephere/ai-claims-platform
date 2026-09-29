@@ -151,6 +151,64 @@ public abstract class IntegrationTest {
         return adjuster.equals("adjuster1") ? "adjuster2" : "adjuster1";
     }
 
+    // ---------- documents ----------
+
+    private static final java.net.http.HttpClient BROWSER = java.net.http.HttpClient.newHttpClient();
+
+    /** What the browser does: PUT the bytes to the presigned URL with the given headers. */
+    protected static int putToStorage(com.claimsai.document.api.DocumentDtos.UploadInstructions upload, byte[] bytes)
+            throws Exception {
+        var request = java.net.http.HttpRequest.newBuilder(java.net.URI.create(upload.uploadUrl()))
+                .method(upload.method(), java.net.http.HttpRequest.BodyPublishers.ofByteArray(bytes));
+        upload.headers().forEach(request::header);
+        return BROWSER.send(request.build(), java.net.http.HttpResponse.BodyHandlers.discarding()).statusCode();
+    }
+
+    /** Start, PUT and complete an upload through the portal (claimant) or staff API; returns the document id. */
+    protected Long uploadDocument(String username, Long claimId, byte[] bytes, String contentType,
+                                  com.claimsai.document.domain.Document.Category category) throws Exception {
+        boolean portal = username.startsWith("claimant");
+        String base = portal ? "/api/v1/portal" : "/api/v1";
+        var request = new com.claimsai.document.api.DocumentDtos.UploadUrlRequest("file", contentType, bytes.length,
+                category);
+        var started = post(username, base + "/claims/" + claimId + "/documents", request, Map.class).getBody();
+        @SuppressWarnings("unchecked")
+        Map<String, Object> document = (Map<String, Object>) started.get("document");
+        @SuppressWarnings("unchecked")
+        Map<String, Object> upload = (Map<String, Object>) started.get("upload");
+        @SuppressWarnings("unchecked")
+        var instructions = new com.claimsai.document.api.DocumentDtos.UploadInstructions((String) upload.get("uploadUrl"),
+                (String) upload.get("method"), (Map<String, String>) upload.get("headers"), null);
+        assertThat(putToStorage(instructions, bytes)).isEqualTo(200);
+        Long documentId = ((Number) document.get("id")).longValue();
+        assertThat(post(username, base + "/documents/" + documentId + "/complete", null, String.class).getStatusCode())
+                .isEqualTo(HttpStatus.OK);
+        return documentId;
+    }
+
+    /**
+     * A fresh auto policy (collision + comprehensive, in force since January) for this test only. Fraud
+     * rules look at the policy's history, so tests that check scores must not share a policy with others.
+     */
+    protected String newAutoPolicy(String holderUsername) {
+        String number = "POL-T-" + (100000 + java.util.concurrent.ThreadLocalRandom.current().nextInt(900000));
+        jdbc.sql("INSERT INTO policy (policy_number, product, holder_user_id, holder_name, status, effective_from, "
+                        + "effective_to, deductible) SELECT :number, 'AUTO', id, display_name, 'ACTIVE', "
+                        + "DATE '2026-01-01', DATE '2027-01-01', 500 FROM app_user WHERE username = :holder")
+                .param("number", number).param("holder", holderUsername).update();
+        jdbc.sql("INSERT INTO policy_coverage (policy_number, coverage_type, limit_amount) "
+                        + "VALUES (:number, 'COLLISION', 25000), (:number, 'COMPREHENSIVE', 15000)")
+                .param("number", number).update();
+        return number;
+    }
+
+    /** "Time passes": due retries of this claim's jobs of a type become due now. */
+    protected void makeJobsDue(Long claimId, String type) {
+        jdbc.sql("UPDATE job SET due_at = :now WHERE claim_id = :claimId AND type = :type AND status = 'PENDING'")
+                .param("now", java.sql.Timestamp.from(java.time.Instant.now().minusSeconds(1)))
+                .param("claimId", claimId).param("type", type).update();
+    }
+
     protected String etag(String username, String path) {
         return get(username, path, String.class).getHeaders().getETag();
     }

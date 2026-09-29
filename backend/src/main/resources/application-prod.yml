@@ -4,6 +4,10 @@
 #   STORAGE_ENDPOINT (Supabase: https://<project-ref>.supabase.co/storage/v1/s3), STORAGE_REGION (the
 #   project's region), STORAGE_BUCKET, STORAGE_ACCESS_KEY, STORAGE_SECRET_KEY (Supabase S3 access keys).
 #   The bucket must be private, and its CORS must allow PUT from the Vercel origin (browser uploads).
+#   AI_PROVIDER=groq and GROQ_API_KEY for real document assessment (stub otherwise).
+server:
+  # Render terminates TLS in a proxy: trust its X-Forwarded-* headers (client IP for the login limiter)
+  forward-headers-strategy: framework
 logging:
   structured:
     format:

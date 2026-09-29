@@ -21,7 +21,9 @@ RUN java -Djarmode=tools -jar /app.jar extract --layers --launcher --destination
 FROM eclipse-temurin:17-jre-alpine
 LABEL org.opencontainers.image.title="ai-claims-platform"
 
-RUN addgroup -S app && adduser -S app -G app
+# fonts: PDFBox renders pages of scanned PDFs for the vision model (Alpine ships with none)
+RUN apk add --no-cache fontconfig ttf-dejavu \
+ && addgroup -S app && adduser -S app -G app
 WORKDIR /app
 
 COPY --from=build --chown=app:app /extracted/dependencies/ ./

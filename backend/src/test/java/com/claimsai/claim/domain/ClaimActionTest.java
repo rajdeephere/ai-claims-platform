@@ -11,6 +11,7 @@ import static com.claimsai.claim.domain.ClaimAction.REASSIGN;
 import static com.claimsai.claim.domain.ClaimAction.REOPEN;
 import static com.claimsai.claim.domain.ClaimAction.REQUEST_INFO;
 import static com.claimsai.claim.domain.ClaimAction.RESPOND;
+import static com.claimsai.claim.domain.ClaimAction.REVIEW_AI;
 import static com.claimsai.claim.domain.ClaimAction.UPLOAD_DOCUMENT;
 import static com.claimsai.claim.domain.ClaimAction.WITHDRAW;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -27,7 +28,7 @@ class ClaimActionTest {
         Claim claim = ClaimTest.open();   // filed by user 1, assigned to user 3
 
         assertThat(ClaimAction.allowed(claim, ADJUSTER, Role.ADJUSTER)).containsExactlyInAnyOrder(REQUEST_INFO, CLOSE, ADD_NOTE,
-                UPLOAD_DOCUMENT);
+                UPLOAD_DOCUMENT, REVIEW_AI);
     }
 
     @Test
@@ -38,7 +39,7 @@ class ClaimActionTest {
     @Test
     void supervisorReassignsButNeverClosesForTheAdjuster() {
         assertThat(ClaimAction.allowed(ClaimTest.open(), SUPERVISOR, Role.SUPERVISOR))
-                .containsExactlyInAnyOrder(REASSIGN, ADD_NOTE, UPLOAD_DOCUMENT);
+                .containsExactlyInAnyOrder(REASSIGN, ADD_NOTE, UPLOAD_DOCUMENT, REVIEW_AI);
     }
 
     @Test

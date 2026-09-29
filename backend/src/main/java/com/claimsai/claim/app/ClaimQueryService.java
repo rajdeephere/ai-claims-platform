@@ -13,6 +13,7 @@ import com.claimsai.claim.infra.ClaimNoteRepository;
 import com.claimsai.claim.infra.ClaimRepository;
 import com.claimsai.claim.infra.ClaimSpecifications;
 import com.claimsai.claim.infra.InfoRequestRepository;
+import com.claimsai.common.error.NotFoundException;
 import com.claimsai.identity.app.CurrentUser;
 import com.claimsai.identity.app.UserRef;
 import com.claimsai.identity.app.UserService;
@@ -22,6 +23,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -47,6 +50,19 @@ public class ClaimQueryService {
         this.access = access;
         this.users = users;
         this.audit = audit;
+    }
+
+    /** Facts other modules' background work needs (no user: system access). */
+    public record ClaimFacts(Long claimId, String claimNumber, String policyNumber, LocalDate lossDate,
+                             String lossType, String description, BigDecimal estimatedLoss,
+                             ClaimStatus status) {
+    }
+
+    public ClaimFacts facts(Long claimId) {
+        Claim c = claims.findById(claimId).orElseThrow(() ->
+                new NotFoundException("CLAIM_NOT_FOUND", "Claim " + claimId + " not found"));
+        return new ClaimFacts(c.getId(), c.getClaimNumber(), c.getPolicyNumber(), c.getLossDate(), c.getLossType().name(),
+                c.getDescription(), c.getEstimatedLoss(), c.getStatus());
     }
 
     public ClaimDetails details(Long claimId, CurrentUser user) {

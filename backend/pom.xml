@@ -25,6 +25,8 @@
         <archunit.version>1.4.1</archunit.version>
         <awssdk.version>2.31.54</awssdk.version>
         <tika.version>3.3.2</tika.version>
+        <pdfbox.version>3.0.8</pdfbox.version>
+        <bucket4j.version>8.20.0</bucket4j.version>
         <!-- CI runs "mvn test" then "mvn verify -Dskip.unit=true", so unit tests don't run twice -->
         <skip.unit>false</skip.unit>
     </properties>
@@ -103,6 +105,23 @@
             <groupId>org.apache.tika</groupId>
             <artifactId>tika-core</artifactId>
             <version>${tika.version}</version>
+        </dependency>
+
+        <!-- PDF text for the LLM; pages of scanned PDFs rendered for the vision model (ADR-0021) -->
+        <dependency>
+            <groupId>org.apache.pdfbox</groupId>
+            <artifactId>pdfbox</artifactId>
+            <version>${pdfbox.version}</version>
+        </dependency>
+        <!-- rate limits: failed logins per user and IP, outbound LLM calls per minute -->
+        <dependency>
+            <groupId>com.bucket4j</groupId>
+            <artifactId>bucket4j_jdk17-core</artifactId>
+            <version>${bucket4j.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.ben-manes.caffeine</groupId>
+            <artifactId>caffeine</artifactId>
         </dependency>
 
         <!-- ===== Test ===== -->

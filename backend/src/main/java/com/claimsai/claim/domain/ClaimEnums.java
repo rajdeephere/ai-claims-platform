@@ -22,6 +22,8 @@ public final class ClaimEnums {
         HOLDER_MISMATCH,
         UNASSIGNED,
         /** The assessment didn't finish in time; the claim moved on without it. */
-        ASSESSMENT_TIMED_OUT
+        ASSESSMENT_TIMED_OUT,
+        /** A later document pushed the fraud score over the SIU threshold; SIU referral is a person's call (phase 7). */
+        HIGH_FRAUD_SCORE
     }
 }

@@ -8,4 +8,7 @@ public final class DocumentEvents {
 
     public static final String AGGREGATE = "DOCUMENT";
     public static final String DOCUMENT_UPLOADED = "DOCUMENT_UPLOADED";
+
+    public static final String DOCUMENT_ID = "documentId";
+    public static final String CLAIM_ID = "claimId";
 }

@@ -37,7 +37,13 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(ApiException.class)
     public ResponseEntity<ApiError> handleApiException(ApiException ex, HttpServletRequest req) {
-        return build(ex.status(), ex.code(), ex.getMessage(), req.getRequestURI(), List.of());
+        ResponseEntity<ApiError> response = build(ex.status(), ex.code(), ex.getMessage(), req.getRequestURI(), List.of());
+        if (ex instanceof RateLimitedException limited) {
+            return ResponseEntity.status(response.getStatusCode())
+                    .header(HttpHeaders.RETRY_AFTER, String.valueOf(limited.retryAfterSeconds()))
+                    .body(response.getBody());
+        }
+        return response;
     }
 
     /** JPA @Version: another transaction changed the row first; the loser gets 409 instead of overwriting. */

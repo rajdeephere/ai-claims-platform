@@ -128,6 +128,22 @@ class AuthApiIT extends IntegrationTest {
     }
 
     @Test
+    void repeatedFailedLoginsAreStoppedWith429AndRetryAfter() {
+        String username = "probe-" + java.util.UUID.randomUUID().toString().substring(0, 8);
+        for (int i = 0; i < 5; i++) {
+            assertThat(http.postForEntity("/api/v1/auth/login", new LoginRequest(username, "guess" + i), ApiError.class)
+                    .getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        }
+
+        ResponseEntity<ApiError> sixth = http.postForEntity("/api/v1/auth/login", new LoginRequest(username, "guess5"),
+                ApiError.class);
+
+        assertThat(sixth.getStatusCode()).isEqualTo(HttpStatus.TOO_MANY_REQUESTS);
+        assertThat(sixth.getBody().code()).isEqualTo("TOO_MANY_LOGIN_ATTEMPTS");
+        assertThat(Long.parseLong(sixth.getHeaders().getFirst(HttpHeaders.RETRY_AFTER))).isBetween(1L, 60L);
+    }
+
+    @Test
     void roleChecksReturn403ForTheWrongRole() {
         ResponseEntity<ApiError> adjuster = http.exchange("/test/supervisor-only", HttpMethod.GET,
                 bearer(login("adjuster1").accessToken()), ApiError.class);

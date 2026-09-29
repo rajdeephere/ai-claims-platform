@@ -3,6 +3,14 @@ app:
   security:
     jwt:
       secret: test-secret-for-integration-tests-0123456789
+    login-limit:
+      failures-per-ip-per-minute: 1000   # all tests come from 127.0.0.1
+  intake:
+    document-grace: 2s                   # tests upload documents right after FNOL
+    assessment-recheck: 300ms
+  ai:
+    provider: stub
+    requests-per-minute: 1000
   # poll fast so background work finishes within a test
   jobs:
     poll-interval-ms: 100

@@ -103,4 +103,25 @@ public final class IntakeJobs {
             intake.completeAssessment(job.claimId(), true);
         }
     }
+
+    /** After each document assessment (scheduled by the ai module). */
+    @Component
+    public static class ReviewClaimRisk implements JobHandler {
+
+        private final ClaimIntakeService intake;
+
+        public ReviewClaimRisk(ClaimIntakeService intake) {
+            this.intake = intake;
+        }
+
+        @Override
+        public String type() {
+            return ClaimIntakeService.REVIEW_CLAIM_RISK;
+        }
+
+        @Override
+        public void handle(JobContext job) {
+            intake.reviewRisk(job.claimId());
+        }
+    }
 }

@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
 
@@ -19,6 +20,10 @@ public interface ClaimRepository extends JpaRepository<Claim, Long>, JpaSpecific
     long nextClaimSequence();
 
     Page<Claim> findByClaimantUserId(Long claimantUserId, Pageable pageable);
+
+    /** Other claims on the same policy with a loss in the given window (fraud signal: frequent claims). */
+    long countByPolicyNumberAndIdNotAndLossDateBetween(String policyNumber, Long excludedClaimId, LocalDate from,
+                                                       LocalDate to);
 
     /** Open workload per adjuster in one query: [adjusterId, count]. */
     @Query("""

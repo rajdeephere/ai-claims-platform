@@ -62,7 +62,7 @@ class FnolApiIT extends IntegrationTest {
         assertThat(staff.status()).isEqualTo(ClaimStatus.OPEN);
         assertThat(staff.policyVerification()).isEqualTo(PolicyVerification.VERIFIED);
         assertThat(staff.flags()).isEmpty();
-        assertThat(staff.segment()).isEqualTo(Segment.STANDARD);   // no fraud score yet: never fast-tracked
+        assertThat(staff.segment()).isEqualTo(Segment.STANDARD);   // 3,800: above the fast-track limit
         assertThat(staff.assignedAdjuster().role()).isEqualTo(Role.ADJUSTER);
         assertThat(staff.contactName()).isEqualTo("Asha Verma");   // defaulted from the claimant's profile
     }

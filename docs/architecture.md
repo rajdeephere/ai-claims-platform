@@ -35,7 +35,7 @@ flowchart TB
 | `platform` | idempotency keys; job queue, timers, ops API; transactional outbox and relay; housekeeping | phase 2–3 |
 | `notification` | in-app claimant notifications, fed only by claim events | phase 3 |
 | `document` | storage port (S3 adapter), presigned upload/download, verification (type, size, hash), document lifecycle | phase 4 |
-| `ai` | LLM port, extraction, damage assessment, fraud score | phase 5 |
+| `ai` | LLM port (Groq, stub), document preparation, extraction + validation, fraud score (implements the claim module's `RiskAssessmentPort`), human review | phase 5 |
 | `exposure`, `payment`, `approval` | reserves, payments, authority limits, maker-checker | phase 6 |
 | `siu`, `activity` | fraud investigations, tasks, SLA escalation | phase 7 |
 
@@ -115,6 +115,27 @@ sequenceDiagram
 ```
 
 See [ADR-0019](adr/0019-documents-presigned-upload-and-verification.md).
+
+## AI assessment (phase 5)
+
+```mermaid
+flowchart LR
+  UP["DOCUMENT_UPLOADED<br/>(outbox)"] --> JOB["ASSESS_DOCUMENT job<br/>outside any transaction"]
+  JOB --> PREP["PDF text / rendered scan /<br/>resized photo"]
+  PREP --> LLM["LLM port<br/>Groq or stub, 25/min"]
+  LLM --> VAL{"ExtractionValidator<br/>1 retry"}
+  VAL -- valid --> SAVE["assessment + provenance<br/>(model, prompt, file hash)"]
+  VAL -- invalid twice / outage --> FAIL["FAILED: manual review"]
+  SAVE --> RISK["REVIEW_CLAIM_RISK job"]
+  FAIL --> RISK
+  RISK --> SCORE["fraud score: rules + LLM signals<br/>(RiskAssessmentPort)"]
+  SCORE --> TRIAGE["triage / SIU at intake,<br/>flag afterwards"]
+  ADJ["adjuster accept / override<br/>(reason required)"] --> RISK
+```
+
+The claim module defines `RiskAssessmentPort`; the ai module implements it, so modules stay acyclic
+([ADR-0022](adr/0022-explainable-fraud-score-behind-a-port.md)). The model never decides
+([ADR-0021](adr/0021-ai-suggests-people-decide.md)).
 
 ## Key decisions
 

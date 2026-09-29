@@ -33,7 +33,7 @@ class ClaimTest {
 
     static Claim open() {
         Claim claim = submitted();
-        claim.startAssessment(new PolicyCheck.Result(true, Set.of()), NOW);
+        claim.startAssessment(new PolicyCheck.Result(true, Set.of()), null, NOW);
         claim.completeAssessment(new TriageRules.Decision(Segment.STANDARD, false, "test"), NOW);
         claim.assignTo(3L, NOW);
         return claim;
@@ -61,7 +61,7 @@ class ClaimTest {
     void unverifiedPolicyKeepsTheFlagsButStillGoesToAssessment() {
         Claim claim = submitted();
 
-        claim.startAssessment(new PolicyCheck.Result(false, EnumSet.of(ClaimFlag.POLICY_NOT_IN_FORCE)), NOW);
+        claim.startAssessment(new PolicyCheck.Result(false, EnumSet.of(ClaimFlag.POLICY_NOT_IN_FORCE)), null, NOW);
 
         assertThat(claim.getStatus()).isEqualTo(ClaimStatus.ASSESSING);
         assertThat(claim.getPolicyVerification()).isEqualTo(PolicyVerification.UNVERIFIED);
@@ -71,7 +71,7 @@ class ClaimTest {
     @Test
     void triageCanReferStraightToSiu() {
         Claim claim = submitted();
-        claim.startAssessment(new PolicyCheck.Result(true, Set.of()), NOW);
+        claim.startAssessment(new PolicyCheck.Result(true, Set.of()), null, NOW);
 
         claim.completeAssessment(new TriageRules.Decision(Segment.STANDARD, true, "fraud"), NOW);
 
@@ -164,7 +164,7 @@ class ClaimTest {
     @Test
     void assigningClearsTheUnassignedFlagAndReturnsThePreviousAdjuster() {
         Claim claim = submitted();
-        claim.startAssessment(new PolicyCheck.Result(true, Set.of()), NOW);
+        claim.startAssessment(new PolicyCheck.Result(true, Set.of()), null, NOW);
         claim.completeAssessment(new TriageRules.Decision(Segment.STANDARD, false, "x"), NOW);
         claim.markUnassigned(NOW);
         assertThat(claim.getFlags()).contains(ClaimFlag.UNASSIGNED);

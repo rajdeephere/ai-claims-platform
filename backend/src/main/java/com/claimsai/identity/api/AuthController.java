@@ -5,12 +5,15 @@ import com.claimsai.identity.api.AuthDtos.LoginRequest;
 import com.claimsai.identity.api.AuthDtos.RefreshRequest;
 import com.claimsai.identity.api.AuthDtos.TokenResponse;
 import com.claimsai.identity.api.AuthDtos.UserSummary;
+import com.claimsai.common.error.AuthenticationFailedException;
 import com.claimsai.identity.app.AuthService;
+import com.claimsai.identity.app.LoginAttemptLimiter;
 import com.claimsai.identity.app.AuthService.IssuedTokens;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -28,10 +31,12 @@ import java.time.Duration;
 public class AuthController {
 
     private final AuthService authService;
+    private final LoginAttemptLimiter loginLimiter;
     private final Clock clock;
 
-    public AuthController(AuthService authService, Clock clock) {
+    public AuthController(AuthService authService, LoginAttemptLimiter loginLimiter, Clock clock) {
         this.authService = authService;
+        this.loginLimiter = loginLimiter;
         this.clock = clock;
     }
 
@@ -39,8 +44,15 @@ public class AuthController {
     @Operation(operationId = "login", summary = "Log in", description = "Demo users: claimant1, claimant2, adjuster1, adjuster2, "
             + "supervisor1, siu1 (password Password1!)")
     @DocumentedErrors({401, 429})
-    public TokenResponse login(@Valid @RequestBody LoginRequest request) {
-        return toResponse(authService.login(request.username(), request.password()));
+    public TokenResponse login(@Valid @RequestBody LoginRequest request, HttpServletRequest http) {
+        String ip = http.getRemoteAddr();   // behind Render's proxy: X-Forwarded-For, via forward-headers-strategy
+        loginLimiter.checkAllowed(request.username(), ip);
+        try {
+            return toResponse(authService.login(request.username(), request.password()));
+        } catch (AuthenticationFailedException e) {
+            loginLimiter.recordFailure(request.username(), ip);
+            throw e;
+        }
     }
 
     @PostMapping("/refresh")

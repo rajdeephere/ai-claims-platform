@@ -23,7 +23,9 @@ public enum ClaimAction {
     RESPOND(Set.of(ClaimStatus.AWAITING_INFO)),
     WITHDRAW(Set.of(ClaimStatus.OPEN, ClaimStatus.AWAITING_INFO)),
     /** From the moment of FNOL until the claim is closed. */
-    UPLOAD_DOCUMENT(EnumSet.complementOf(EnumSet.of(ClaimStatus.CLOSED)));
+    UPLOAD_DOCUMENT(EnumSet.complementOf(EnumSet.of(ClaimStatus.CLOSED))),
+    /** Accept or correct what the AI read from a document. */
+    REVIEW_AI(EnumSet.complementOf(EnumSet.of(ClaimStatus.CLOSED)));
 
     private final Set<ClaimStatus> statuses;
 
@@ -47,6 +49,7 @@ public enum ClaimAction {
             case RESPOND, WITHDRAW -> role == Role.CLAIMANT && owner;
             case UPLOAD_DOCUMENT -> (role == Role.CLAIMANT && owner) || (role == Role.ADJUSTER && assignee)
                     || role == Role.SUPERVISOR;
+            case REVIEW_AI -> (role == Role.ADJUSTER && assignee) || role == Role.SUPERVISOR;
         };
     }
 

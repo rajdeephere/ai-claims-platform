@@ -85,13 +85,13 @@ class ClaimLifecycleIT extends IntegrationTest {
         List<TimelineEntryResponse> timeline = List.of(get("supervisor1", staff(id) + "/timeline",
                 TimelineEntryResponse[].class).getBody());
         assertThat(timeline).extracting(TimelineEntryResponse::action).containsExactly(
-                "CLAIM_SUBMITTED", "POLICY_CHECKED", "STATUS_CHANGED", "CLAIM_TRIAGED", "STATUS_CHANGED",
+                "CLAIM_SUBMITTED", "POLICY_CHECKED", "STATUS_CHANGED", "FRAUD_SCORED", "CLAIM_TRIAGED", "STATUS_CHANGED",
                 "CLAIM_ASSIGNED", "INFO_REQUESTED", "STATUS_CHANGED", "INFO_RECEIVED", "STATUS_CHANGED",
                 "STATUS_CHANGED", "STATUS_CHANGED");
         assertThat(timeline).filteredOn(e -> e.action().equals("STATUS_CHANGED"))
                 .extracting(e -> e.after().get("status"))
                 .containsExactly("ASSESSING", "OPEN", "AWAITING_INFO", "OPEN", "CLOSED", "OPEN");
-        TimelineEntryResponse request = timeline.get(6);
+        TimelineEntryResponse request = timeline.get(7);
         assertThat(request.actor()).isEqualTo(adjuster);
         assertThat(request.text()).isEqualTo("Please upload the repair estimate");
         assertThat(request.correlationId()).isEqualTo("lifecycle-it-1");

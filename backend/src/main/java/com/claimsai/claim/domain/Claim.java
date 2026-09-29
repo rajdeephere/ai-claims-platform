@@ -101,6 +101,10 @@ public class Claim {
     @Column(name = "fraud_score")
     private Integer fraudScore;
 
+    /** The policy's start date at the policy check (fraud signal: loss soon after inception). */
+    @Column(name = "policy_start")
+    private LocalDate policyStart;
+
     @Column(name = "assigned_adjuster_id")
     private Long assignedAdjusterId;
 
@@ -157,8 +161,9 @@ public class Claim {
     // ---- system steps ----
 
     /** SUBMITTED -> ASSESSING, with the policy check result. */
-    public ClaimTransition startAssessment(PolicyCheck.Result policyCheck, Instant now) {
+    public ClaimTransition startAssessment(PolicyCheck.Result policyCheck, LocalDate policyStart, Instant now) {
         ClaimTransition transition = moveTo(ClaimStatus.ASSESSING, "start assessment", now);
+        this.policyStart = policyStart;
         policyVerification = policyCheck.verified() ? PolicyVerification.VERIFIED : PolicyVerification.UNVERIFIED;
         addFlags(policyCheck.flags());
         return transition;
@@ -189,6 +194,25 @@ public class Claim {
             throw new InvalidTransitionException("time out the assessment of", status);
         }
         addFlags(EnumSet.of(ClaimFlag.ASSESSMENT_TIMED_OUT));
+        updatedAt = now;
+    }
+
+    /** The risk assessment's score, 0-100; replaced when new documents change it. */
+    public Integer recordFraudScore(int score, Instant now) {
+        if (score < 0 || score > 100) {
+            throw new IllegalArgumentException("Fraud score must be 0-100, was " + score);
+        }
+        if (!status.isActive()) {
+            throw new InvalidTransitionException("score", status);
+        }
+        Integer previous = fraudScore;
+        fraudScore = score;
+        updatedAt = now;
+        return previous;
+    }
+
+    public void flagHighFraudScore(Instant now) {
+        addFlags(EnumSet.of(ClaimFlag.HIGH_FRAUD_SCORE));
         updatedAt = now;
     }
 
@@ -376,6 +400,10 @@ public class Claim {
 
     public Integer getFraudScore() {
         return fraudScore;
+    }
+
+    public LocalDate getPolicyStart() {
+        return policyStart;
     }
 
     public Long getAssignedAdjusterId() {

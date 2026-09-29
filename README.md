@@ -20,7 +20,8 @@ engine, and the whole system is designed to run on free-tier hosting.
 ## Stack
 
 Java 17 · Spring Boot 3.5 · Spring Security (JWT) · Spring Data JPA · PostgreSQL 16 · Flyway ·
-S3 API (AWS SDK v2; SeaweedFS locally, Supabase Storage in the cloud) · Apache Tika · springdoc OpenAPI ·
+S3 API (AWS SDK v2; SeaweedFS locally, Supabase Storage in the cloud) · Apache Tika · PDFBox · Groq LLM
+(OpenAI-compatible API) · Bucket4j · springdoc OpenAPI ·
 JUnit 5 · Testcontainers · ArchUnit · Awaitility · Docker · GitHub Actions · Angular (phase 8) ·
 Vercel, Render, Supabase, Groq
 
@@ -58,6 +59,11 @@ claim's ETag in `If-Match`. Failed background jobs are listed for supervisors at
 
 Documents: `POST /api/v1/portal/claims/{id}/documents` returns a presigned URL; PUT the file there, then
 `POST /api/v1/portal/documents/{docId}/complete`. See [phase 4](docs/phases/phase-04-documents.md).
+
+**AI:** uploaded documents are assessed in the background. By default a deterministic stub stands in for
+the model (no key needed). For real extraction, get a free key at console.groq.com and run with
+`AI_PROVIDER=groq GROQ_API_KEY=... mvn spring-boot:run`. Staff see the results at
+`/api/v1/claims/{id}/ai-assessments` and can accept or override them. See [phase 5](docs/phases/phase-05-ai-pipeline.md).
 
 Demo policies are listed in [phase 2](docs/phases/phase-02-claim-core.md#demo-policies).
 

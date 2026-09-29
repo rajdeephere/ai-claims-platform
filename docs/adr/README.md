@@ -22,5 +22,8 @@
 | [0018](0018-claim-intake-as-jobs.md) | Claim intake as a chain of jobs | Accepted | 3 |
 | [0019](0019-documents-presigned-upload-and-verification.md) | Documents: presigned direct upload, verified on completion; SeaweedFS / Supabase Storage | Accepted | 4 |
 | [0020](0020-stable-explicit-operation-ids.md) | Explicit, stable operationIds on every endpoint | Accepted | 4 |
+| [0021](0021-ai-suggests-people-decide.md) | AI document assessment: the model suggests, validated code and people decide | Accepted | 5 |
+| [0022](0022-explainable-fraud-score-behind-a-port.md) | Explainable fraud score behind a port the claim module owns | Accepted | 5 |
+| [0023](0023-rate-limits-for-login-and-llm-calls.md) | Rate limits for failed logins and outbound LLM calls | Accepted | 5 |
 
 New ADRs use [template.md](template.md).

@@ -10,7 +10,7 @@ ADRs, and a commit made by the developer.
 | 2 | Claim core | Policy stub, FNOL with idempotency key, claim state machine, claim number, claimant vs staff views, visibility rules, audit trail, timeline, ETag / If-Match | ✅ |
 | 3 | Jobs and timers | Database job queue (`SKIP LOCKED`, leases, backoff), transactional outbox + relay, policy verification job, assessment timeout, claimant notifications, ops API, housekeeping | ✅ |
 | 4 | Documents | Storage port, SeaweedFS locally (MinIO images discontinued), Supabase S3 in the cloud, presigned upload/download, content-type detection, SHA-256 de-duplication, abandoned-upload clean-up | ✅ |
-| 5 | AI pipeline | LLM port, Groq client + stub, extraction and damage assessment, output validation, fraud score, triage and assignment | ⏳ |
+| 5 | AI pipeline | LLM port, Groq client + stub, extraction and damage assessment, output validation, explainable fraud score, triage waits for assessments, human accept/override, login and LLM rate limits | ✅ |
 | 6 | Money and approvals | Exposures, reserves, payments, authority limits, maker-checker approvals, payment port with idempotency, denial requests | ⏳ |
 | 7 | SIU, information requests, SLA | SIU cases and payment hold, request-info timers, activities and escalation, recovery, close and reopen | ⏳ |
 | 8 | UI and deployment | Angular portal and staff workspace (theme supplied), Vercel + Render + Supabase deployment, keep-alive | ⏳ |
