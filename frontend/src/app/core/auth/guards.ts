@@ -19,7 +19,8 @@ export const roleGuard: CanActivateFn = (route) => {
 export const homeFor = (role: Role | null): string =>
   role === 'CLAIMANT' ? '/portal/claims' : role === 'SIU' ? '/siu' : '/dashboard';
 
-export const homeRedirect: CanActivateFn = () => {
+/** "/" is the public landing page; signed-in users go straight to their own start page. */
+export const landingGuard: CanActivateFn = () => {
   const auth = inject(AuthService);
-  return inject(Router).createUrlTree([auth.isAuthenticated() ? homeFor(auth.role()) : '/login']);
+  return auth.isAuthenticated() ? inject(Router).createUrlTree([homeFor(auth.role())]) : true;
 };

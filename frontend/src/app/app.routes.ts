@@ -1,18 +1,28 @@
 import { Routes } from '@angular/router';
-import { authGuard, homeRedirect, roleGuard } from './core/auth/guards';
+import { authGuard, landingGuard, roleGuard } from './core/auth/guards';
 import { LayoutComponent } from './layout/layout.component';
 
 const STAFF = ['ADJUSTER', 'SUPERVISOR', 'SIU'];
 const HANDLERS = ['ADJUSTER', 'SUPERVISOR'];
 
 export const routes: Routes = [
+  {
+    path: '',
+    pathMatch: 'full',
+    canActivate: [landingGuard],
+    loadComponent: () => import('./features/landing/landing.component').then((m) => m.LandingComponent),
+  },
   { path: 'login', loadComponent: () => import('./features/auth/login.component').then((m) => m.LoginComponent) },
+  {
+    path: 'glossary',
+    title: 'Insurance glossary · AI Claims',
+    loadComponent: () => import('./features/glossary/glossary.component').then((m) => m.GlossaryComponent),
+  },
   {
     path: '',
     component: LayoutComponent,
     canActivate: [authGuard],
     children: [
-      { path: '', pathMatch: 'full', canActivate: [homeRedirect], children: [] },
       {
         path: 'portal',
         canActivate: [roleGuard],

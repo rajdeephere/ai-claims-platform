@@ -29,6 +29,8 @@ After that, a deployment that anyone can repeat on free tiers.
 | Approvals (maker-checker hints), activities (open, overdue, SLA breaches), failed jobs with retry | `features/staff/` |
 | SIU queue and case file with outcome | `features/siu/` |
 | Backend: `GET /api/v1/users?role=` (supervisor, for reassignment); `WITHDRAW` hidden once money has gone out (BUG-014); contract 1.7.0 | `identity/api/UserDirectoryController`, `ClaimQueryService` |
+| Public landing page: pitch, what it demonstrates, one-click tours by role, five-minute tour, architecture, links; live demo-server status that also wakes the API; link-preview (Open Graph) tags and image | `features/landing/`, `core/auth/demo-users.ts`, `src/index.html`, `public/og-image.png` |
+| Public insurance glossary: 47 terms in 7 groups (policy, claim, roles, money, fraud, work, AI) with meaning, how the app applies it, and where to see it; search; linked from the landing page and the sidebar | `features/glossary/` |
 | Unit tests (Vitest): token only to the API, single-flight refresh, session end, no refresh on login failure | `core/auth/auth.spec.ts` |
 | Deployment: Render Blueprint, Vercel config, build-time API URL, keep-alive workflow, CI frontend job | `render.yaml`, `frontend/vercel.json`, `frontend/scripts/write-env.mjs`, `.github/workflows/` |
 | ADRs 0029–0030; step-by-step deployment guide | `docs/adr/`, `docs/deployment.md` |

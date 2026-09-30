@@ -3,6 +3,14 @@
 Angular 21 (standalone components, signals, zoneless), Tailwind 3 and Angular Material. The look
 follows the team's design theme. One app serves all four roles; each role sees its own navigation.
 
+`/` is a public landing page: what the project demonstrates, one-click demo sign-in per role, a
+five-minute tour, and a live status of the demo server (it pings the API, which also wakes it after
+idle time). Signed-in users skip it and land on their own start page.
+
+`/glossary` (public, also in the app's sidebar under Help) explains the 47 insurance terms the app uses:
+what each means, how the app applies it, and where to see it. The content is in
+`features/glossary/glossary.data.ts`; its numbers (limits, points, deadlines) follow the backend rules.
+
 | Role | Screens |
 |---|---|
 | Claimant | my claims, report a loss (+ documents), claim status, answer questions, withdraw, messages |

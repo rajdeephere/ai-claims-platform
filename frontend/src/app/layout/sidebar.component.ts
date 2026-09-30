@@ -41,6 +41,12 @@ const SECTIONS: NavSection[] = [
       { label: 'Failed jobs', icon: 'build_circle', route: '/ops/jobs', roles: ['SUPERVISOR'] },
     ],
   },
+  {
+    header: 'Help',
+    items: [
+      { label: 'Glossary', icon: 'menu_book', route: '/glossary', roles: ['CLAIMANT', 'ADJUSTER', 'SUPERVISOR', 'SIU'] },
+    ],
+  },
 ];
 
 @Component({

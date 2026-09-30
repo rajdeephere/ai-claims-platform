@@ -77,6 +77,8 @@ unanswered questions, investigations, payments the bank never confirmed) appears
 `/api/v1/activities`. Breached SLAs show on `/api/v1/dashboard/supervisor`. See
 [phase 7](docs/phases/phase-07-siu-activities-sla.md).
 
+**Live demo:** https://ai-claims-platform.vercel.app (landing page with one-click sign-in per role).
+
 **Web app:** `cd frontend && npm ci && npm start`, then open http://localhost:4200 and use the demo
 buttons on the login page. See [frontend/README.md](frontend/README.md).
 

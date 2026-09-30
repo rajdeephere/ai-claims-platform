@@ -1,25 +1,21 @@
 import { ChangeDetectionStrategy, Component, inject, input, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
 import { homeFor } from '../../core/auth/guards';
 import { apiError } from '../../core/http/api-errors';
-
-/** The demo users seeded by Flyway (db/demo); shown so a visitor can try each role. */
-const DEMO_USERS = [
-  { username: 'claimant1', role: 'Claimant', hint: 'reports a loss, answers questions' },
-  { username: 'adjuster1', role: 'Adjuster', hint: 'handles claims, pays up to ₹5,000' },
-  { username: 'supervisor1', role: 'Supervisor', hint: 'approves, reassigns, watches SLAs' },
-  { username: 'siu1', role: 'SIU', hint: 'investigates referrals' },
-];
+import { DEMO_PASSWORD, DEMO_USERS } from '../../core/auth/demo-users';
 
 @Component({
   selector: 'app-login',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="min-h-screen flex items-center justify-center bg-[#f9fafb] px-4 py-10">
       <div class="w-full max-w-[420px]">
+        <a routerLink="/" class="inline-flex items-center gap-1 text-[13px] text-gray-500 hover:text-primary mb-3">
+          <span class="material-icons text-[18px]">arrow_back</span>Back to home
+        </a>
         <div class="bg-white rounded-lg border border-gray-200 py-11 px-10">
           <div class="text-center mb-8">
             <div class="flex items-center justify-center gap-2.5 mb-3.5">
@@ -76,7 +72,7 @@ const DEMO_USERS = [
           </form>
 
           <div class="mt-6 pt-5 border-t border-gray-200">
-            <p class="text-[11.5px] text-gray-400 text-center mb-3">Demo accounts (password <code>Password1!</code>)</p>
+            <p class="text-[11.5px] text-gray-400 text-center mb-3">Demo accounts (password <code>{{ demoPassword }}</code>)</p>
             <div class="grid grid-cols-2 gap-2">
               @for (demo of demoUsers; track demo.username) {
                 <button type="button" (click)="useDemo(demo.username)"
@@ -100,6 +96,7 @@ export class LoginComponent {
   expired = input<string>();
 
   demoUsers = DEMO_USERS;
+  demoPassword = DEMO_PASSWORD;
   loading = signal(false);
   error = signal('');
 
@@ -109,7 +106,7 @@ export class LoginComponent {
   });
 
   useDemo(username: string): void {
-    this.form.setValue({ username, password: 'Password1!' });
+    this.form.setValue({ username, password: DEMO_PASSWORD });
     this.submit();
   }
 
